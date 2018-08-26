@@ -91,7 +91,6 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 	//Placeholders
 	icon = 'icons/obj/vehicles.dmi'
 	icon_state = "cargo_engine"
-
 /obj/vehicle/multitile/root/cm_armored/Dispose()
 	for(var/i in linked_objs)
 		var/obj/O = linked_objs[i]
@@ -137,7 +136,7 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 	if(!can_use_hp(user)) return
 
 	if(!hardpoints.Find(active_hp))
-		user << "<span class='warning'>Please select an active hardpoint first.</span>"
+		to_chat(user, "<span class='warning'>Please select an active hardpoint first.</span>")
 		return
 
 	var/obj/item/hardpoint/HP = hardpoints[active_hp]
@@ -149,7 +148,7 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 		return
 
 	if(!HP.firing_arc(A))
-		user << "<span class='warning'>The target is not within your firing arc.</span>"
+		to_chat(user, "<span class='warning'>The target is not within your firing arc.</span>")
 		return
 
 	HP.active_effect(get_turf(A))
@@ -168,17 +167,17 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 	var/list/slots = get_activatable_hardpoints()
 
 	if(!slots.len)
-		usr << "<span class='warning'>All of the modules can't be activated or are broken.</span>"
+		to_chat(usr, "<span class='warning'>All of the modules can't be activated or are broken.</span>")
 		return
 
 	var/slot = input("Select a slot.") in slots
 
 	var/obj/item/hardpoint/HP = hardpoints[slot]
 	if(!HP)
-		usr << "<span class='warning'>There's nothing installed on that hardpoint.</span>"
+		to_chat(usr, "<span class='warning'>There's nothing installed on that hardpoint.</span>")
 
 	active_hp = slot
-	usr << "<span class='notice'>You select the [slot] slot.</span>"
+	to_chat(usr, "<span class='notice'>You select the [slot] slot.</span>")
 	if(isliving(usr))
 		var/mob/living/M = usr
 		M.set_interaction(src)
@@ -194,22 +193,22 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 	var/list/slots = get_activatable_hardpoints()
 
 	if(!slots.len)
-		usr << "<span class='warning'>All of the modules can't be reloaded or are broken.</span>"
+		to_chat(usr, "<span class='warning'>All of the modules can't be reloaded or are broken.</span>")
 		return
 
 	var/slot = input("Select a slot.") in slots
 
 	var/obj/item/hardpoint/HP = hardpoints[slot]
 	if(!HP.backup_clips.len)
-		usr << "<span class='warning'>That module has no remaining backup clips.</span>"
+		to_chat(usr, "<span class='warning'>That module has no remaining backup clips.</span>")
 		return
 
 	var/obj/item/ammo_magazine/A = HP.backup_clips[1] //LISTS START AT 1 REEEEEEEEEEEE
 	if(!A)
-		usr << "<span class='danger'>Something went wrong! PM a staff member! Code: T_RHPN</span>"
+		to_chat(usr, "<span class='danger'>Something went wrong! PM a staff member! Code: T_RHPN</span>")
 		return
 
-	usr << "<span class='notice'>You begin reloading the [slot] module.</span>"
+	to_chat(usr, "<span class='notice'>You begin reloading the [slot] module.</span>")
 
 	sleep(20)
 
@@ -218,7 +217,7 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 	HP.ammo = A
 	HP.backup_clips.Remove(A)
 
-	usr << "<span class='notice'>You reload the [slot] module.</span>"
+	to_chat(usr, "<span class='notice'>You reload the [slot] module.</span>")
 
 
 /obj/vehicle/multitile/root/cm_armored/proc/get_activatable_hardpoints()
@@ -277,9 +276,9 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 	for(var/i in hardpoints)
 		var/obj/item/hardpoint/HP = hardpoints[i]
 		if(!HP)
-			user << "There is nothing installed on the [i] hardpoint slot."
+			to_chat(user, "There is nothing installed on the [i] hardpoint slot.")
 		else
-			user << "There is a [HP.health <= 0 ? "broken" : "working"] [HP] installed on the [i] hardpoint slot."
+			to_chat(user, "There is a [HP.health <= 0 ? "broken" : "working"] [HP] installed on the [i] hardpoint slot.")
 
 //Special armored vic healthcheck that mainly updates the hardpoint states
 /obj/vehicle/multitile/root/cm_armored/healthcheck()
@@ -338,9 +337,9 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 /obj/vehicle/multitile/hitbox/cm_armored
 	name = "Armored Vehicle"
 	desc = "Get inside to operate the vehicle."
-
 	luminosity = 7
 	throwpass = 1 //You can lob nades over tanks, and there's some dumb check somewhere that requires this
+	var/lastsound = 0
 
 //If something want to delete this, it's probably either an admin or the shuttle
 //If it's an admin, they want to disable this
@@ -380,7 +379,9 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 		W.take_damage(30)
 		var/obj/vehicle/multitile/root/cm_armored/CA = root
 		CA.take_damage_type(10, "blunt", W)
-		playsound(W, 'sound/effects/metal_crash.ogg', 35)
+		if(world.time > lastsound + 10)
+			playsound(W, 'sound/effects/metal_crash.ogg', 35)
+			lastsound = world.time
 	else if(istype(A, /obj/structure/mineral_door/resin))
 		var/obj/structure/mineral_door/resin/R = A
 		R.health = 0
@@ -394,8 +395,9 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 		G.dismantle()
 		var/obj/vehicle/multitile/root/cm_armored/CA = root
 		CA.take_damage_type(10, "blunt", G)
-		playsound(G, 'sound/effects/metal_crash.ogg', 35)
-
+		if(world.time > lastsound + 10)
+			playsound(G, 'sound/effects/metal_crash.ogg', 35)
+			lastsound = world.time
 /obj/vehicle/multitile/hitbox/cm_armored/Move(var/atom/A, var/direction)
 
 	for(var/mob/living/M in get_turf(src))
@@ -605,11 +607,13 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 
 	//Need to the what the hell you're doing
 	if(user.mind && user.mind.cm_skills && user.mind.cm_skills.engineer < SKILL_ENGINEER_MT)
-		user << "<span class='warning'>You don't know what to do with [O] on [src].</span>"
-		return
+		user.visible_message("<span class='notice'>[user] fumbles around figuring out what to do with [O] on the [src].</span>",
+		"<span class='notice'>You fumble around figuring out what to do with [O] on the [src].</span>")
+		var/fumbling_time = 50 * ( SKILL_ENGINEER_MT - user.mind.cm_skills.engineer )
+		if(!do_after(user, fumbling_time, TRUE, 5, BUSY_ICON_BUILD)) return
 
 	if(!damaged_hps.len)
-		user << "<span class='notice'>All of the hardpoints are in working order.</span>"
+		to_chat(user, "<span class='notice'>All of the hardpoints are in working order.</span>")
 		return
 
 	//Pick what to repair
@@ -618,7 +622,7 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 	var/obj/item/hardpoint/old = hardpoints[slot] //Is there something there already?
 
 	if(old) //If so, fuck you get it outta here
-		user << "<span class='warning'>Please remove the attached hardpoint module first.</span>"
+		to_chat(user, "<span class='warning'>Please remove the attached hardpoint module first.</span>")
 		return
 
 	//Determine how many 3 second intervals to wait and if you have the right tool
@@ -627,51 +631,51 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 		if(HDPT_PRIMARY)
 			num_delays = 5
 			if(!iswelder(O))
-				user << "<span class='warning'>That's the wrong tool. Use a welder.</span>"
+				to_chat(user, "<span class='warning'>That's the wrong tool. Use a welder.</span>")
 				return
 			var/obj/item/tool/weldingtool/WT = O
 			if(!WT.isOn())
-				user << "<span class='warning'>You need to light your [WT] first.</span>"
+				to_chat(user, "<span class='warning'>You need to light your [WT] first.</span>")
 				return
 			WT.remove_fuel(num_delays, user)
 
 		if(HDPT_SECDGUN)
 			num_delays = 3
 			if(!iswrench(O))
-				user << "<span class='warning'>That's the wrong tool. Use a wrench.</span>"
+				to_chat(user, "<span class='warning'>That's the wrong tool. Use a wrench.</span>")
 				return
 
 		if(HDPT_SUPPORT)
 			num_delays = 2
 			if(!iswrench(O))
-				user << "<span class='warning'>That's the wrong tool. Use a wrench.</span>"
+				to_chat(user, "<span class='warning'>That's the wrong tool. Use a wrench.</span>")
 				return
 
 		if(HDPT_ARMOR)
 			num_delays = 10
 			if(!iswelder(O))
-				user << "<span class='warning'>That's the wrong tool. Use a welder.</span>"
+				to_chat(user, "<span class='warning'>That's the wrong tool. Use a welder.</span>")
 				return
 			var/obj/item/tool/weldingtool/WT = O
 			if(!WT.isOn())
-				user << "<span class='warning'>You need to light your [WT] first.</span>"
+				to_chat(user, "<span class='warning'>You need to light your [WT] first.</span>")
 				return
 			WT.remove_fuel(num_delays, user)
 
 	user.visible_message("<span class='notice'>[user] starts repairing the [slot] slot on [src].</span>",
-		"<span class='notice'>You start repairing the [slot] slot on [src].</span>")
+		"<span class='notice'>You start repairing the [slot] slot on the [src].</span>")
 
 	if(!do_after(user, 30*num_delays, TRUE, num_delays, BUSY_ICON_FRIENDLY))
 		user.visible_message("<span class='notice'>[user] stops repairing the [slot] slot on [src].</span>",
-			"<span class='notice'>You stop repairing the [slot] slot on [src].</span>")
+			"<span class='notice'>You stop repairing the [slot] slot on the [src].</span>")
 		return
 
 	if(!Adjacent(user))
 		user.visible_message("<span class='notice'>[user] stops repairing the [slot] slot on [src].</span>",
-			"<span class='notice'>You stop repairing the [slot] slot on [src].</span>")
+			"<span class='notice'>You stop repairing the [slot] slot on the [src].</span>")
 		return
 
-	user.visible_message("<span class='notice'>[user] repairs the [slot] slot on [src].</span>",
+	user.visible_message("<span class='notice'>[user] repairs the [slot] slot on the [src].</span>",
 		"<span class='notice'>You repair the [slot] slot on [src].</span>")
 
 	damaged_hps -= slot //We repaired it, good job
@@ -690,7 +694,7 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 	var/obj/item/hardpoint/HP = hardpoints[slot]
 
 	if(!HP)
-		user << "<span class='warning'>There is nothing installed on that slot.</span>"
+		to_chat(user, "<span class='warning'>There is nothing installed on that slot.</span>")
 		return
 
 	HP.try_add_clip(AM, user)
@@ -700,21 +704,23 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 /obj/vehicle/multitile/root/cm_armored/proc/install_hardpoint(var/obj/item/hardpoint/HP, var/mob/user)
 
 	if(!user.mind || !(!user.mind.cm_skills || user.mind.cm_skills.engineer >= SKILL_ENGINEER_MT))
-		user << "<span class='warning'>You don't know what to do with [HP] on [src].</span>"
-		return
+		user.visible_message("<span class='notice'>[user] fumbles around figuring out what to do with [HP] on the [src].</span>",
+		"<span class='notice'>You fumble around figuring out what to do with [HP] on the [src].</span>")
+		var/fumbling_time = 50 * ( SKILL_ENGINEER_MT - user.mind.cm_skills.engineer )
+		if(!do_after(user, fumbling_time, TRUE, 5, BUSY_ICON_BUILD)) return
 
 	if(damaged_hps.Find(HP.slot))
-		user << "<span class='warning'>You need to fix the hardpoint first.</span>"
+		to_chat(user, "<span class='warning'>You need to fix the hardpoint first.</span>")
 		return
 
 	var/obj/item/hardpoint/old = hardpoints[HP.slot]
 
 	if(old)
-		user << "<span class='warning'>Remove the previous hardpoint module first.</span>"
+		to_chat(user, "<span class='warning'>Remove the previous hardpoint module first.</span>")
 		return
 
-	user.visible_message("<span class='notice'>[user] begins installing [HP] on the [HP.slot] hardpoint slot on [src].</span>",
-		"<span class='notice'>You begin installing [HP] on the [HP.slot] hardpoint slot on [src].</span>")
+	user.visible_message("<span class='notice'>[user] begins installing [HP] on the [HP.slot] hardpoint slot on the [src].</span>",
+		"<span class='notice'>You begin installing [HP] on the [HP.slot] hardpoint slot on the [src].</span>")
 
 	var/num_delays = 1
 
@@ -726,10 +732,10 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 		if(HDPT_TREADS) num_delays = 7
 
 	if(!do_after(user, 30*num_delays, TRUE, num_delays, BUSY_ICON_FRIENDLY))
-		user.visible_message("<span class='warning'>[user] stops installing \the [HP] on [src].</span>", "<span class='warning'>You stop installing \the [HP] on [src].</span>")
+		user.visible_message("<span class='warning'>[user] stops installing \the [HP] on the [src].</span>", "<span class='warning'>You stop installing \the [HP] on [src].</span>")
 		return
 
-	user.visible_message("<span class='notice'>[user] installs \the [HP] on [src].</span>", "<span class='notice'>You install \the [HP] on [src].</span>")
+	user.visible_message("<span class='notice'>[user] installs \the [HP] on the [src].</span>", "<span class='notice'>You install \the [HP] on [src].</span>")
 
 	user.temp_drop_inv_item(HP, 0)
 
@@ -740,19 +746,21 @@ var/list/TANK_HARDPOINT_OFFSETS = list(
 /obj/vehicle/multitile/root/cm_armored/proc/uninstall_hardpoint(var/obj/item/O, var/mob/user)
 
 	if(!user.mind || !(!user.mind.cm_skills || user.mind.cm_skills.engineer >= SKILL_ENGINEER_MT))
-		user << "<span class='warning'>You don't know what to do with [O] on [src].</span>"
-		return
+		user.visible_message("<span class='notice'>[user] fumbles around figuring out what to do with [O] on the [src].</span>",
+		"<span class='notice'>You fumble around figuring out what to do with [O] on the [src].</span>")
+		var/fumbling_time = 50 * ( SKILL_ENGINEER_MT - user.mind.cm_skills.engineer )
+		if(!do_after(user, fumbling_time, TRUE, 5, BUSY_ICON_BUILD)) return
 
 	var/slot = input("Select a slot to try and remove") in hardpoints
 
 	var/obj/item/hardpoint/old = hardpoints[slot]
 
 	if(!old)
-		user << "<span class='warning'>There is nothing installed there.</span>"
+		to_chat(user, "<span class='warning'>There is nothing installed there.</span>")
 		return
 
-	user.visible_message("<span class='notice'>[user] begins removing [old] on the [old.slot] hardpoint slot on [src].</span>",
-		"<span class='notice'>You begin removing [old] on the [old.slot] hardpoint slot on [src].</span>")
+	user.visible_message("<span class='notice'>[user] begins removing [old] on the [old.slot] hardpoint slot on the [src].</span>",
+		"<span class='notice'>You begin removing [old] on the [old.slot] hardpoint slot on the [src].</span>")
 
 	var/num_delays = 1
 
