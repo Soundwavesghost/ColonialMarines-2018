@@ -66,8 +66,7 @@
 				playsound(loc, M.attack_sound, 25, 1)
 			for(var/mob/O in viewers(src, null))
 				O.show_message("<span class='attack'>\The <EM>[M]</EM> [M.attacktext] \the <EM>[src]</EM>!</span>", 1)
-			M.attack_log += text("\[[time_stamp()]\] <font color='red'>attacked [src.name] ([src.ckey])</font>")
-			src.attack_log += text("\[[time_stamp()]\] <font color='orange'>was attacked by [M.name] ([M.ckey])</font>")
+			log_combat(M, src, "attacked")
 
 			var/damage = rand(M.melee_damage_lower, M.melee_damage_upper)
 			adjustBruteLoss(damage)
@@ -79,12 +78,12 @@
 			damage = 0
 		adjustBruteLoss(damage)
 		for(var/mob/M in viewers(src, null))
-			if ((M.client && !( M.blinded )))
+			if ((M.client && !is_blind(M)))
 				M.show_message("\red \b [src] has been attacked with [O] by [user]. ")
 	else
 		to_chat(usr, "\red This weapon is ineffective, it does no damage.")
 		for(var/mob/M in viewers(src, null))
-			if ((M.client && !( M.blinded )))
+			if ((M.client && !is_blind(M)))
 				M.show_message("\red [user] gently taps [src] with [O]. ")
 
 
@@ -121,16 +120,16 @@
 				damage = 0
 			adjustBruteLoss(damage)
 			for(var/mob/M in viewers(src, null))
-				if ((M.client && !( M.blinded )))
+				if ((M.client && !is_blind(M)))
 					M.show_message("\red \b [src] has been attacked with [O] by [user]. ")
 		else
 			for(var/mob/M in viewers(src, null))
-				if ((M.client && !( M.blinded )))
+				if ((M.client && !is_blind(M)))
 					M.show_message("\red \b [O] bounces harmlessly off of [src]. ")
 	else
 		to_chat(usr, "\red This weapon is ineffective, it does no damage.")
 		for(var/mob/M in viewers(src, null))
-			if ((M.client && !( M.blinded )))
+			if ((M.client && !is_blind(M)))
 				M.show_message("\red [user] gently taps [src] with [O]. ")
 
 
@@ -247,16 +246,16 @@
 				damage = 0
 			adjustBruteLoss(damage)
 			for(var/mob/M in viewers(src, null))
-				if ((M.client && !( M.blinded )))
+				if ((M.client && !is_blind(M)))
 					M.show_message("\red \b [src] has been attacked with [O] by [user]. ")
 		else
 			for(var/mob/M in viewers(src, null))
-				if ((M.client && !( M.blinded )))
+				if ((M.client && !is_blind(M)))
 					M.show_message("\red \b [O] bounces harmlessly off of [src]. ")
 	else
 		to_chat(usr, "\red This weapon is ineffective, it does no damage.")
 		for(var/mob/M in viewers(src, null))
-			if ((M.client && !( M.blinded )))
+			if ((M.client && !is_blind(M)))
 				M.show_message("\red [user] gently taps [src] with [O]. ")
 
 

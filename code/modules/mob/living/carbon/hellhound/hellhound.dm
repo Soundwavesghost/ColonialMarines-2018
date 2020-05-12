@@ -8,6 +8,7 @@
 	gender = NEUTER
 	health = 120 //Kinda tough. They heal quickly.
 	maxHealth = 120
+	rotate_on_lying = 0
 
 	var/obj/item/device/radio/headset/yautja/radio
 	var/obj/machinery/camera/camera
@@ -16,6 +17,7 @@
 	var/attack_timer = 0
 
 /mob/living/carbon/hellhound/New()
+	verbs += /mob/living/proc/lay_down
 	var/datum/reagents/R = new/datum/reagents(1000)
 	reagents = R
 	R.my_atom = src
@@ -62,7 +64,7 @@
 				H.KnockOut(3)
 				playsound(loc, 'sound/weapons/thudswoosh.ogg', 25, 1)
 				for(var/mob/O in viewers(src, null))
-					if ((O.client && !( O.blinded )))
+					if ((O.client && !is_blind(O)))
 						O.show_message(text("\red <B>[] knocks down [H]!</B>", src), 1)
 		return
 	else if(a_intent == "grab")
@@ -180,8 +182,7 @@
 
 				adjustBruteLoss(damage)
 
-				M.attack_log += text("\[[time_stamp()]\] <font color='red'>[pick(attack.attack_verb)]ed [src.name] ([src.ckey])</font>")
-				src.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been [pick(attack.attack_verb)]ed by [M.name] ([M.ckey])</font>")
+				log_combat(M, src, "[pick(attack.attack_verb)]ed")
 				msg_admin_attack("[key_name(M)] [pick(attack.attack_verb)]ed [key_name(src)]")
 
 				updatehealth()
@@ -202,11 +203,11 @@
 						KnockOut(2)
 						playsound(loc, 'sound/weapons/thudswoosh.ogg', 25, 1)
 						for(var/mob/O in viewers(src, null))
-							if ((O.client && !( O.blinded )))
+							if ((O.client && !is_blind(O)))
 								O.show_message(text("\red <B>[] has pushed down [name]!</B>", M), 1)
 					else
 						for(var/mob/O in viewers(src, null))
-							if ((O.client && !( O.blinded )))
+							if ((O.client && !is_blind(O)))
 								O.show_message(text("\red <B>[] shoves at [name]!</B>", M), 1)
 	return
 
@@ -219,8 +220,7 @@
 			playsound(loc, M.attack_sound, 25, 1)
 		for(var/mob/O in viewers(src, null))
 			O.show_message("\red <B>[M]</B> [M.attacktext] [src]!", 1)
-		M.attack_log += text("\[[time_stamp()]\] <font color='red'>attacked [src.name] ([src.ckey])</font>")
-		src.attack_log += text("\[[time_stamp()]\] <font color='orange'>was attacked by [M.name] ([M.ckey])</font>")
+		log_combat(M, src, "attacked")
 		var/damage = rand(M.melee_damage_lower, M.melee_damage_upper)
 		adjustBruteLoss(damage)
 		updatehealth()
@@ -247,6 +247,14 @@
 /mob/living/carbon/hellhound/IsAdvancedToolUser()
 	return 0
 
+/mob/living/carbon/hellhound/vomit()
+	return
+
+/mob/living/carbon/hellhound/get_permeability_protection()
+	return HELLHOUND_PERM_COEFF
+
+/mob/living/carbon/hellhound/reagent_check(datum/reagent/R) //can't recover from crit otherwise.
+	return FALSE
 
 /mob/living/carbon/hellhound/say(var/message)
 	if(client)

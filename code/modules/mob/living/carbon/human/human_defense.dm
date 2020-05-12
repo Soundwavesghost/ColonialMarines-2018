@@ -156,8 +156,10 @@ Contains most of the procs that are called when a mob is attacked by something
 		weapon_sharp = 0
 		weapon_edge = 0
 
-	if(armor >= 2)	return 0
-	if(!I.force)	return 0
+	if(armor >= 1) //Complete negation
+		return 0
+	if(!I.force)
+		return 0
 	if(weapon_sharp)
 		user.flick_attack_overlay(src, "punch")
 	else
@@ -264,17 +266,16 @@ Contains most of the procs that are called when a mob is attacked by something
 		src.visible_message("\red [src] has been hit in the [hit_area] by [O].", null, null, 5)
 		var/armor = run_armor_check(affecting, "melee", "Your armor has protected your [hit_area].", "Your armor has softened hit to your [hit_area].") //I guess "melee" is the best fit here
 
-		if(armor < 2)
+		if(armor < 1)
 			apply_damage(throw_damage, dtype, zone, armor, is_sharp(O), has_edge(O), O)
 
 		if(ismob(O.thrower))
 			var/mob/M = O.thrower
 			var/client/assailant = M.client
 			if(assailant)
-				src.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been hit with a [O], thrown by [M.name] ([assailant.ckey])</font>")
-				M.attack_log += text("\[[time_stamp()]\] <font color='red'>Hit [src.name] ([src.ckey]) with a thrown [O]</font>")
+				log_combat(M, src, "hit", O, "(thrown)")
 				if(!istype(src,/mob/living/simple_animal/mouse))
-					msg_admin_attack("[src.name] ([src.ckey]) was hit by a [O], thrown by [M.name] ([assailant.ckey]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[src.x];Y=[src.y];Z=[src.z]'>JMP</a>)")
+					msg_admin_attack("[key_name(usr)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[usr]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[usr.x];Y=[usr.y];Z=[usr.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[usr]'>FLW</a>) was hit by a [O], thrown by [key_name(M)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[M]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[M.x];Y=[M.y];Z=[M.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[M]'>FLW</a>)")
 
 		//thrown weapon embedded object code.
 		if(dtype == BRUTE && istype(O,/obj/item))

@@ -19,7 +19,7 @@
 	desc = "A wrench with many common uses. Can be usually found in your hand."
 	icon = 'icons/obj/items/items.dmi'
 	icon_state = "wrench"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_WAIST
 	force = 5.0
 	throwforce = 7.0
@@ -37,7 +37,7 @@
 	desc = "You can be totally screwwy with this."
 	icon = 'icons/obj/items/items.dmi'
 	icon_state = "screwdriver"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_WAIST
 	force = 5.0
 	w_class = 1.0
@@ -96,7 +96,7 @@
 	desc = "This cuts wires."
 	icon = 'icons/obj/items/items.dmi'
 	icon_state = "cutters"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_WAIST
 	force = 6.0
 	throw_speed = 2
@@ -131,7 +131,7 @@
 	name = "blowtorch"
 	icon = 'icons/obj/items/items.dmi'
 	icon_state = "welder"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_WAIST
 
 	//Amount of OUCH when it's thrown
@@ -151,6 +151,7 @@
 	var/welding = 0 	//Whether or not the blowtorch is off(0), on(1) or currently welding(2)
 	var/max_fuel = 20 	//The max amount of fuel the welder can hold
 	var/weld_tick = 0	//Used to slowly deplete the fuel when the tool is left on.
+	var/status = TRUE //When welder is secured on unsecured
 
 /obj/item/tool/weldingtool/New()
 //	var/random_fuel = min(rand(10,20),max_fuel)
@@ -185,6 +186,11 @@
 	else //should never be happening, but just in case
 		toggle(TRUE)
 
+/obj/item/tool/weldingtool/attackby(obj/item/I, mob/user, params)
+	if(istype(I,/obj/item/tool/screwdriver))
+		flamethrower_screwdriver(src, user)
+	else
+		. = ..()
 
 /obj/item/tool/weldingtool/attack(mob/M, mob/user)
 
@@ -198,7 +204,7 @@
 
 		if(H.species.flags & IS_SYNTHETIC)
 			if(M == user)
-				to_chat(user, "\red You can't repair damage to your own body - it's against OH&S.")
+				to_chat(user, "<span class='warning'>You can't repair damage to your own body - it's against OH&S.</span>")
 				return
 
 		if(S.brute_dam && welding)
@@ -215,7 +221,10 @@
 		return ..()
 
 /obj/item/tool/weldingtool/afterattack(obj/O as obj, mob/user as mob, proximity)
-	if(!proximity) return
+	if(!proximity)
+		return
+	if(!status && O.is_refillable())
+		reagents.trans_to(O, reagents.total_volume)
 	if (istype(O, /obj/structure/reagent_dispensers/fueltank) && get_dist(src,O) <= 1)
 		if(!welding)
 			O.reagents.trans_to(src, max_fuel)
@@ -240,6 +249,9 @@
 
 
 /obj/item/tool/weldingtool/attack_self(mob/user as mob)
+	if(!status)
+		to_chat(user, "<span class='warning'>[src] can't be turned on while unsecured!</span>")
+		return
 	toggle()
 	return
 
@@ -322,51 +334,17 @@
 			SetLuminosity(0)
 		processing_objects.Remove(src)
 
-//Decides whether or not to damage a player's eyes based on what they're wearing as protection
-//Note: This should probably be moved to mob
-/obj/item/tool/weldingtool/proc/eyecheck(mob/user)
-	if(!iscarbon(user))	return 1
-	var/safety = user.get_eye_protection()
-	if(ishuman(user))
-		var/mob/living/carbon/human/H = user
-		var/datum/internal_organ/eyes/E = H.internal_organs_by_name["eyes"]
-		if(!E)
-			return
-		if(E.robotic == ORGAN_ROBOT)
-			return
-		switch(safety)
-			if(1)
-				to_chat(user, "<span class='danger'>Your eyes sting a little.</span>")
-				E.damage += rand(1, 2)
-				if(E.damage > 12)
-					H.eye_blurry += rand(3,6)
-			if(0)
-				to_chat(user, "<span class='warning'>Your eyes burn.</span>")
-				E.damage += rand(2, 4)
-				if(E.damage > 10)
-					E.damage += rand(4,10)
-			if(-1)
-				to_chat(user, "<span class='warning'>Your thermals intensify [src]'s glow. Your eyes itch and burn severely.</span>")
-				H.eye_blurry += rand(12,20)
-				E.damage += rand(12, 16)
-		if(safety<2)
-
-			if(E.damage > 10)
-				to_chat(H, "<span class='warning'>Your eyes are really starting to hurt. This can't be good for you!</span>")
-
-			if (E.damage >= E.min_broken_damage)
-				to_chat(H, "<span class='warning'>You go blind!</span>")
-				H.sdisabilities |= BLIND
-			else if (E.damage >= E.min_bruised_damage)
-				to_chat(H, "<span class='warning'>You go blind!</span>")
-				H.eye_blind = 5
-				H.eye_blurry = 5
-				H.disabilities |= NEARSIGHTED
-				spawn(100)
-					H.disabilities &= ~NEARSIGHTED
-
-
-
+/obj/item/tool/weldingtool/proc/flamethrower_screwdriver(obj/item/I, mob/user)
+	if(welding)
+		to_chat(user, "<span class='warning'>Turn it off first!</span>")
+		return
+	status = !status
+	if(status)
+		to_chat(user, "<span class='notice'>You resecure [src] and close the fuel tank.</span>")
+		container_type = 0
+	else
+		to_chat(user, "<span class='notice'>[src] can now be refuelled and emptied.</span>")
+		container_type = OPENCONTAINER
 
 /obj/item/tool/weldingtool/pickup(mob/user)
 	if(welding && loc != user)
@@ -419,7 +397,7 @@
 	desc = "Used to remove floors and to pry open doors."
 	icon = 'icons/obj/items/items.dmi'
 	icon_state = "crowbar"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_WAIST
 	force = 5.0
 	throwforce = 7.0

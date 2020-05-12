@@ -16,31 +16,22 @@
 	var/mode = 0	//off or on.
 
 /obj/item/tool/hand_labeler/afterattack(atom/A, mob/user as mob, proximity)
-	if(!proximity) return
+	if(!proximity)
+		return
 	if(!mode)	//if it's off, give up.
 		return
 	if(A == loc)	// if placing the labeller into something (e.g. backpack)
 		return		// don't set a label
-
-	if(!labels_left)
-		to_chat(user, "<span class='notice'>No labels left.</span>")
-		return
 	if(!label || !length(label))
 		to_chat(user, "<span class='notice'>No text set.</span>")
 		return
 	if(length(A.name) + length(label) > 64)
 		to_chat(user, "<span class='notice'>Label too big.</span>")
 		return
-	if(isliving(A))
-		to_chat(user, "<span class='notice'>You can't label living beings.</span>")
+	if(!labels_left)
+		to_chat(user, "<span class='notice'>You've run out of labelling paper, feed some paper into it.</span>")
 		return
-	if(istype(A, /obj/item/reagent_container/glass))
-		to_chat(user, "<span class='notice'>The label will not stick to [A]. Use a pen instead.</span>")
-		return
-	if(istype(A, /obj/item/tool/surgery))
-		to_chat(user, "<span class='notice'>That wouldn't be sanitary.</span>")
-		return
-	if(isturf(A))
+	if(isturf(A) || ismob(A))
 		to_chat(user, "<span class='notice'>The label won't stick to that.</span>")
 		return
 
@@ -65,6 +56,12 @@
 		to_chat(user, "<span class='notice'>You turn off \the [src].</span>")
 
 
+/obj/item/tool/hand_labeler/attackby(obj/item/I, mob/user, params)
+	. = ..()
+	if(istype(I, /obj/item/paper))
+		to_chat(user, "<span class='notice'>You insert [I] into [src].</span>")
+		cdel(I)
+		labels_left = min(labels_left+5, initial(labels_left))
 
 
 
@@ -108,9 +105,8 @@
 		return
 	to_chat(user, "<span class='warning'>You stab [M] with the pen.</span>")
 //	to_chat(M, "\red You feel a tiny prick!")
-	M.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been stabbed with [name]  by [user.name] ([user.ckey])</font>")
-	user.attack_log += text("\[[time_stamp()]\] <font color='red'>Used the [name] to stab [M.name] ([M.ckey])</font>")
-	msg_admin_attack("[user.name] ([user.ckey]) Used the [name] to stab [M.name] ([M.ckey]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
+	log_combat(user, M, "stabbed", src)
+	msg_admin_attack("[key_name(usr)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[usr]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[usr.x];Y=[usr.y];Z=[usr.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[usr]'>FLW</a>) used the [name] to stab [key_name(M)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[M]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[M.x];Y=[M.y];Z=[M.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[M]'>FLW</a>)")
 	return
 
 
@@ -119,7 +115,7 @@
  */
 /obj/item/tool/pen/sleepypen
 	desc = "It's a black ink pen with a sharp point and a carefully engraved \"Waffle Co.\""
-	flags_atom = FPRINT|OPENCONTAINER
+	container_type = OPENCONTAINER
 	flags_equip_slot = SLOT_WAIST
 	origin_tech = "materials=2;syndicate=5"
 
@@ -138,6 +134,7 @@
 		return
 	..()
 	if(reagents.total_volume)
+		reagents.reaction(M, INJECT)
 		if(M.reagents) reagents.trans_to(M, 50) //used to be 150
 	return
 
@@ -146,7 +143,7 @@
  * Parapens
  */
  /obj/item/tool/pen/paralysis
-	flags_atom = FPRINT|OPENCONTAINER
+	container_type = OPENCONTAINER
 	flags_equip_slot = SLOT_WAIST
 	origin_tech = "materials=2;syndicate=5"
 
@@ -157,6 +154,7 @@
 	..()
 	if(M.can_inject(user,1))
 		if(reagents.total_volume)
+			reagents.reaction(M, INJECT)
 			if(M.reagents) reagents.trans_to(M, 50)
 
 

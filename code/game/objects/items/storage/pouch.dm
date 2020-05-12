@@ -30,15 +30,9 @@
 
 /obj/item/storage/pouch/general
 	name = "light general pouch"
-	desc = "A general purpose pouch used to carry small items and ammo magazines."
+	desc = "A general purpose pouch used to carry small items."
 	icon_state = "small_drop"
 	draw_mode = 1
-	bypass_w_limit = list("/obj/item/ammo_magazine/rifle",
-					"/obj/item/ammo_magazine/smg",
-					"/obj/item/ammo_magazine/pistol",
-					"/obj/item/ammo_magazine/revolver",
-					"/obj/item/ammo_magazine/sniper",
-					)
 
 /obj/item/storage/pouch/general/medium
 	name = "medium general pouch"
@@ -99,12 +93,13 @@
 	name = "first-aid pouch"
 	desc = "It can contain autoinjectors, ointments, and bandages."
 	icon_state = "firstaid"
-	storage_slots = 4
+	storage_slots = 5
 	can_hold = list(
 					"/obj/item/stack/medical/ointment",
-					"/obj/item/reagent_container/hypospray/autoinjector/Tramadol",
-					"/obj/item/reagent_container/hypospray/autoinjector/tricord",
-					"/obj/item/stack/medical/bruise_pack"
+					"/obj/item/reagent_container/hypospray/autoinjector/tramadol",
+					"/obj/item/reagent_container/hypospray/autoinjector/tricordrazine",
+					"/obj/item/stack/medical/bruise_pack",
+					"/obj/item/stack/medical/splint"
 					)
 
 /obj/item/storage/pouch/firstaid/full
@@ -113,10 +108,10 @@
 /obj/item/storage/pouch/firstaid/full/New()
 	..()
 	new /obj/item/stack/medical/ointment (src)
-	new /obj/item/reagent_container/hypospray/autoinjector/Tramadol (src)
-	new /obj/item/reagent_container/hypospray/autoinjector/tricord (src)
+	new /obj/item/reagent_container/hypospray/autoinjector/tramadol (src)
+	new /obj/item/reagent_container/hypospray/autoinjector/tricordrazine (src)
 	new /obj/item/stack/medical/bruise_pack (src)
-
+	new /obj/item/stack/medical/splint (src)
 
 /obj/item/storage/pouch/pistol
 	name = "sidearm pouch"
@@ -243,13 +238,16 @@
 	name = "explosive pouch"
 	desc = "It can contain grenades, plastiques, mine boxes, and other explosives."
 	icon_state = "large_explosive"
-	storage_slots = 3
+	storage_slots = 4
 	max_w_class = 3
 	can_hold = list(
 					"/obj/item/explosive/plastique",
 					"/obj/item/explosive/mine",
 					"/obj/item/explosive/grenade",
-					"/obj/item/storage/box/explosive_mines"
+					"/obj/item/storage/box/explosive_mines",
+					"/obj/item/ammo_magazine/rocket",
+					"/obj/item/device/radio/detpack",
+					"/obj/item/device/assembly/signaler",
 					)
 
 /obj/item/storage/pouch/explosive/full/New()
@@ -283,12 +281,18 @@
 	    "/obj/item/reagent_container/hypospray"
 	)
 
+/obj/item/storage/pouch/medical/full/New()
+	..()
+	new /obj/item/stack/medical/advanced/bruise_pack(src)
+	new /obj/item/stack/medical/advanced/ointment(src)
+	new /obj/item/stack/medical/splint(src)
 
 /obj/item/storage/pouch/autoinjector
 	name = "auto-injector pouch"
 	desc = "A pouch specifically for auto-injectors."
 	icon_state = "autoinjector"
-	storage_slots = 4
+	storage_slots = 7
+	max_storage_space = 14
 	can_hold = list(
 	    "/obj/item/reagent_container/hypospray/autoinjector"
 	)
@@ -298,17 +302,20 @@
 	name = "syringe pouch"
 	desc = "It can contain syringes."
 	icon_state = "syringe"
-	storage_slots = 6
+	storage_slots = 5
+	max_storage_space = 10
 	can_hold = list("/obj/item/reagent_container/syringe")
 
 
 /obj/item/storage/pouch/medkit
 	name = "medkit pouch"
-	max_w_class = 3
+	w_class = 4.1 //does not fit in backpack
+	max_w_class = 4
 	draw_mode = 1
 	icon_state = "medkit"
 	desc = "It's specifically made to hold a medkit."
 	can_hold = list("/obj/item/storage/firstaid")
+	bypass_w_limit = list("/obj/item/storage/firstaid")
 
 
 /obj/item/storage/pouch/medkit/full/New()
@@ -373,6 +380,33 @@
 	can_hold = list("/obj/item/device/radio")
 
 
+/obj/item/storage/pouch/field_pouch
+	name = "field utility pouch"
+	storage_slots = 5
+	max_w_class = 3
+	icon_state = "radio"
+	draw_mode = 1
+	desc = "It can contain a motion detector, signaller, beacons, maps, flares, radios and other handy battlefield communication and detection devices."
+	can_hold = list("/obj/item/device/motiondetector",
+					"/obj/item/device/radio",
+					"/obj/item/device/assembly/signaler",
+					"/obj/item/device/megaphone",
+					"/obj/item/device/flashlight",
+					"/obj/item/device/whistle",
+					"/obj/item/device/binoculars",
+					"/obj/item/map/current_map",
+					"/obj/item/map/squad_beacon",
+					)
+
+/obj/item/storage/pouch/field_pouch/full/New()
+	.=..()
+	new /obj/item/device/motiondetector (src)
+	new /obj/item/device/whistle (src)
+	new /obj/item/device/radio (src)
+	new /obj/item/map/current_map (src)
+	new /obj/item/device/binoculars/tactical (src)
+
+
 /obj/item/storage/pouch/electronics
 	name = "electronics pouch"
 	desc = "It is designed to hold most electronics, power cells and circuitboards."
@@ -405,10 +439,16 @@
 					"/obj/item/stack/sandbags_empty"
 					)
 
+/obj/item/storage/pouch/construction/full/New()
+	..()
+	new /obj/item/stack/sandbags_empty/half (src)
+	new /obj/item/stack/barbed_wire/small_stack (src)
+	new /obj/item/tool/shovel/etool (src)
+
 /obj/item/storage/pouch/tools
 	name = "tools pouch"
 	desc = "It's designed to hold maintenance tools - screwdriver, wrench, cable coil, etc. It also has a hook for an entrenching tool."
-	storage_slots = 4
+	storage_slots = 5
 	max_w_class = 3
 	icon_state = "tools"
 	can_hold = list(
@@ -429,3 +469,13 @@
 	new /obj/item/tool/wirecutters (src)
 	new /obj/item/device/multitool (src)
 	new /obj/item/tool/wrench (src)
+	new /obj/item/tool/crowbar (src)
+
+/obj/item/storage/pouch/shotgun //New shotgun shell pouch that is actually worth a shit and will be replacing light general in vendors
+	name = "shotgun shell pouch"
+	desc = "A pouch specialized for holding shotgun ammo."
+	icon_state = "small_drop"
+	storage_slots = 4
+	draw_mode = 0
+	can_hold = list("/obj/item/ammo_magazine/handful",
+					)

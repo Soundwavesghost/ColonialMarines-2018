@@ -1,11 +1,7 @@
 //admin verb groups - They can overlap if you so wish. Only one of each verb will exist in the verbs list regardless
 var/list/admin_verbs_default = list(
-	/datum/admins/proc/show_player_panel,	/*shows an interface for individual players, with various links (links require additional flags*/
 	/client/proc/toggleadminhelpsound,	/*toggles whether we hear a sound when adminhelps/PMs are used*/
 	/client/proc/deadmin_self,			/*destroys our own admin datum so we can play as a regular player*/
-	/client/proc/hide_verbs,			/*hides all our adminverbs*/
-	/client/proc/hide_most_verbs,		/*hides all our hideable adminverbs*/
-	/client/proc/debug_variables,		/*allows us to -see- the variables of any instance in the game. +VAREDIT needed to modify*/
 	// /client/proc/cmd_mentor_check_new_players
 	)
 var/list/admin_verbs_admin = list(
@@ -16,14 +12,13 @@ var/list/admin_verbs_admin = list(
 	/datum/admins/proc/announce,		/*priority announce something to all clients.*/
 	/client/proc/admin_ghost,			/*allows us to ghost/reenter body at will*/
 	/client/proc/toggle_view_range,		/*changes how far we can see*/
-	/datum/admins/proc/view_txt_log,	/*shows the server log (diary) for today*/
+	/client/proc/getserverlogs,		/*for accessing server logs*/
+	/client/proc/getcurrentlogs,		/*for accessing server logs for the current round*/
 	/client/proc/cmd_admin_pm_context,	/*right-click adminPM interface*/
 	/client/proc/cmd_admin_pm_panel,	/*admin-pm list*/
 	/client/proc/cmd_admin_subtle_message,	/*send an message to somebody as a 'voice in their head'*/
 	/client/proc/cmd_admin_delete,		/*delete an instance/object/mob/etc*/
 	/client/proc/cmd_admin_check_contents,	/*displays the contents of an instance*/
-	/client/proc/giveruntimelog,		/*allows us to give access to runtime logs to somebody*/
-	/client/proc/getserverlog,			/*allows us to fetch server logs (diary) for other days*/
 	/client/proc/jumptocoord,			/*we ghost and jump to a coordinate*/
 	/client/proc/Getmob,				/*teleports a mob to our location*/
 	/client/proc/Getkey,				/*teleports a mob with a certain ckey to our location*/
@@ -78,7 +73,13 @@ var/list/admin_verbs_admin = list(
 	/client/proc/check_round_statistics,
 	/client/proc/award_medal,
 	/client/proc/force_shuttle,
-	/client/proc/remove_players_from_vic
+	/client/proc/remove_players_from_vic,
+	/client/proc/hide_verbs,			/*hides all our adminverbs*/
+	/client/proc/hide_most_verbs,		/*hides all our hideable adminverbs*/
+	/client/proc/debug_variables,		/*allows us to -see- the variables of any instance in the game. +VAREDIT needed to modify*/
+	/datum/admins/proc/show_player_panel,	/*shows an interface for individual players, with various links (links require additional flags*/
+	/datum/admins/proc/viewUnheardMhelps,
+	/datum/admins/proc/viewUnheardAhelps,
 )
 var/list/admin_verbs_ban = list(
 	/client/proc/unban_panel
@@ -90,6 +91,7 @@ var/list/admin_verbs_sounds = list(
 	)
 var/list/admin_verbs_fun = list(
 	// /client/proc/object_talk,
+	/datum/admins/proc/access_news_network,
 	/client/proc/cmd_admin_dress,
 	/client/proc/cmd_admin_select_mob_rank,
 	/client/proc/cmd_admin_gib_self,
@@ -114,6 +116,7 @@ var/list/admin_verbs_server = list(
 	/datum/admins/proc/restart,
 	/datum/admins/proc/delay,
 	/datum/admins/proc/toggleaban,
+	/datum/admins/proc/toggleatime,
 	/datum/admins/proc/end_round,
 	/client/proc/toggle_log_hrefs,
 	/datum/admins/proc/toggleAI,
@@ -121,17 +124,9 @@ var/list/admin_verbs_server = list(
 	/client/proc/cmd_debug_del_all,
 	/datum/admins/proc/adrev,
 	/datum/admins/proc/adspawn,
-	/datum/admins/proc/adjump,
-	/client/proc/forceNextMap,
-	/client/proc/cancelMapVote,
-	/client/proc/killMapDaemon,
-	/client/proc/editVotableMaps,
-	/client/proc/showVotableMaps,
-	/client/proc/forceMDMapVote,
-	/client/proc/reviveMapDaemon
+	/datum/admins/proc/adjump
 	)
 var/list/admin_verbs_debug = list(
-    /client/proc/getruntimelog,                     /*allows us to access runtime logs to somebody*/
 	/client/proc/cmd_admin_list_open_jobs,
 	/client/proc/Debug2,
 	/client/proc/cmd_debug_make_powernets,
@@ -259,14 +254,16 @@ var/list/admin_verbs_mod = list(
 	// /client/proc/investigate_show,		/*various admintools for investigation. Such as a singulo grief-log*/
 	/client/proc/toggleattacklogs,
 	/client/proc/toggleffattacklogs,
-	/datum/admins/proc/view_txt_log,
+	/client/proc/toggleendofroundattacklogs,
+	/client/proc/getcurrentlogs,		/*for accessing server logs for the current round*/
 	/datum/admins/proc/toggleooc,		/*toggles ooc on/off for everyone*/
 	/datum/admins/proc/toggleoocdead,	/*toggles ooc on/off for everyone who is dead*/
 	/client/proc/cmd_admin_changekey,
 	/client/proc/cmd_admin_subtle_message,	/*send an message to somebody as a 'voice in their head'*/
 	/client/proc/cmd_admin_xeno_report,  //Allows creation of IC reports by the Queen Mother
 	/proc/release,
-	/datum/admins/proc/viewUnheardAhelps, //Why even have it as a client proc anyway? ¯\_("/)_/¯
+	/datum/admins/proc/viewUnheardMhelps,
+	/datum/admins/proc/viewUnheardAhelps, //Why even have it as a client proc anyway?
 	/datum/admins/proc/viewCLFaxes,
 	/datum/admins/proc/viewUSCMFaxes
 )
@@ -274,16 +271,13 @@ var/list/admin_verbs_mod = list(
 var/list/admin_verbs_mentor = list(
 	/client/proc/cmd_admin_pm_context,
 	/client/proc/cmd_admin_pm_panel,
-	/datum/admins/proc/player_notes_list,
-	/datum/admins/proc/player_notes_show,
 	/client/proc/admin_ghost,
 	/client/proc/cmd_mod_say,
 	/client/proc/dsay,
-	/datum/admins/proc/togglesleep,
 	/client/proc/cmd_admin_subtle_message,
+	/datum/admins/proc/viewUnheardMhelps,
 	/datum/admins/proc/viewUnheardAhelps,
-	/datum/admins/proc/viewCLFaxes,
-	/datum/admins/proc/viewUSCMFaxes
+	/datum/admins/proc/viewCLFaxes
 )
 
 /client/proc/add_admin_verbs()
@@ -667,8 +661,8 @@ var/list/admin_verbs_mentor = list(
 	set name = "Re-admin Self"
 	set category = "Admin"
 
-	load_admins() //A bit ugly, but hey
 	verbs -= /client/proc/readmin_self
+	readmin()
 	to_chat(src, "<br><br><span class='centerbold'><big>You have ascended back to adminhood. All your verbs should be back where you left them.</big></span><br>")
 	log_admin("[src] readmined themselves.")
 	message_admins("[src] readmined themselves.", 1)
@@ -803,6 +797,14 @@ var/list/admin_verbs_mentor = list(
 	else
 		to_chat(usr, "<span class='boldnotice'>You will no longer get friendly fire attack log messages.</span>")
 
+/client/proc/toggleendofroundattacklogs()
+	set name = "Toggle End-Of-Round Attack Log Messages"
+	set category = "Preferences"
+	prefs.toggles_chat ^= CHAT_ENDROUNDLOGS
+	if (prefs.toggles_chat & CHAT_ENDROUNDLOGS)
+		to_chat(usr, "<span class='boldnotice'>You will now get end-round attack log messages.</span>")
+	else
+		to_chat(usr, "<span class='boldnotice'>You will no longer get end-round attack log messages.</span>")
 
 /client/proc/toggleghostwriters()
 	set name = "Toggle Ghost Blood Writing"

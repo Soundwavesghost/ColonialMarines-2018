@@ -20,7 +20,7 @@
 
 	// Alien number scales to player number (preferred). Swap these to test solo.
 	var/readyplayers = num_players()
-	numaliens = Clamp((readyplayers/4), 1, 14) //(n, minimum, maximum)
+	numaliens = CLAMP((readyplayers/4), 1, 14) //(n, minimum, maximum)
 
 	var/list/datum/mind/possible_aliens = get_players_for_role(BE_ALIEN)
 	var/list/datum/mind/possible_survivors = get_players_for_role(BE_SURVIVOR)
@@ -56,7 +56,7 @@
 			if(X.assigned_role == "MODE")
 				possible_survivors -= X
 
-		numsurvivors = Clamp((readyplayers/7), 0, 5) //(n, minimum, maximum)
+		numsurvivors = CLAMP((readyplayers/7), 0, 5) //(n, minimum, maximum)
 		if(possible_survivors.len) //We may have stripped out all the contendors, so check again.
 			while(numsurvivors > 0)
 				if(!possible_survivors.len) //Ran out of candidates! Can't have a null pick(), so just stick with what we have.
@@ -290,8 +290,7 @@
 			world << 'sound/misc/Game_Over_Man.ogg'
 		else
 			world << 'sound/misc/asses_kicked.ogg'
-		if(round_stats) // Logging to data/logs/round_stats.log
-			to_chat(round_stats, "Alien major victory\nXenos Remaining: [count_xenos()]. Humans remaining: [count_humans()]\nRound time: [duration2text()][log_end]")
+		log_game("Alien major victory\nXenos Remaining: [count_xenos()]. Humans remaining: [count_humans()]\nRound time: [duration2text()]")
 
 	else if(finished == 2)
 		feedback_set_details("round_end_result","marine major victory - xenomorph infestation eradicated")
@@ -301,31 +300,27 @@
 			world << 'sound/misc/hardon.ogg'
 		else
 			world << 'sound/misc/hell_march.ogg'
-		if(round_stats) // Logging to data/logs/round_stats.log
-			to_chat(round_stats, "Marine major victory\nXenos Remaining: [count_xenos()]. Humans remaining: [count_humans()]\nRound time: [duration2text()][log_end]")
+		log_game("Marine major victory\nXenos Remaining: [count_xenos()]. Humans remaining: [count_humans()]\nRound time: [duration2text()]")
 
 	else if(finished == 3)
 		feedback_set_details("round_end_result","marine minor victory - infestation stopped at a great cost")
 		to_chat(world, "\red <FONT size = 3><B>Marine minor victory.</B></FONT>")
 		to_chat(world, "<FONT size = 3><B>Both the marines and the aliens have been terminated. At least the infestation has been eradicated!</B></FONT>")
 		world << 'sound/misc/sadtrombone.ogg'
-		if(round_stats) // Logging to data/logs/round_stats.log
-			to_chat(round_stats, "Marine minor victory (Both dead)\nXenos Remaining: [count_xenos()]. Humans remaining: [count_humans()]\nRound time: [duration2text()][log_end]")
+		log_game("Marine minor victory (Both dead)\nXenos Remaining: [count_xenos()]. Humans remaining: [count_humans()]\nRound time: [duration2text()]")
 
 	else if(finished == 4)
 		feedback_set_details("round_end_result","alien minor victory - infestation survives")
 		to_chat(world, "\red <FONT size = 3><B>Alien minor victory.</B></FONT>")
 		to_chat(world, "<FONT size = 3><B>The [MAIN_SHIP_NAME] has been evacuated... but the infestation remains!</B></FONT>")
-		if(round_stats) // Logging to data/logs/round_stats.log
-			to_chat(round_stats, "Alien minor victory (Evac)\nXenos Remaining: [count_xenos()]. Humans remaining: [count_humans()]\nRound time: [duration2text()][log_end]")
+		log_game("Alien minor victory (Evac)\nXenos Remaining: [count_xenos()]. Humans remaining: [count_humans()]\nRound time: [duration2text()]")
 
 	else if(finished == 5)
 		feedback_set_details("round_end_result","draw - the [MAIN_SHIP_NAME] has been nuked")
 		to_chat(world, "\red <FONT size = 3><B>Draw.</B></FONT>")
 		to_chat(world, "<FONT size = 3><B>The [MAIN_SHIP_NAME] has blown by a nuclear fission device... there are no winners!</B></FONT>")
 		world << 'sound/misc/sadtrombone.ogg'
-		if(round_stats) // Logging to data/logs/round_stats.log
-			to_chat(round_stats, "Draw (Nuke)\nXenos Remaining: [count_xenos()]. Humans remaining: [count_humans()]\nRound time: [duration2text()][log_end]")
+		log_game("Draw (Nuke)\nXenos Remaining: [count_xenos()]. Humans remaining: [count_humans()]\nRound time: [duration2text()]")
 	else
 		to_chat(world, "\red Whoops, something went wrong with declare_completion(), finished: [finished]. Blame the coders!")
 

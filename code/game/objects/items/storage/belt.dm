@@ -131,12 +131,13 @@
 
 /obj/item/storage/belt/medical/New()
 	..()
-	new /obj/item/stack/medical/advanced/bruise_pack(src)
-	new /obj/item/stack/medical/advanced/ointment(src)
-	new /obj/item/stack/medical/splint(src)
+	new /obj/item/device/defibrillator(src)
+	new /obj/item/bodybag/cryobag(src)
+	new /obj/item/roller(src)
+	new /obj/item/storage/pill_bottle/hypervene(src)
 	new /obj/item/storage/pill_bottle/bicaridine(src)
 	new /obj/item/storage/pill_bottle/dexalin(src)
-	new /obj/item/storage/pill_bottle/antitox(src)
+	new /obj/item/storage/pill_bottle/dylovene(src)
 	new /obj/item/storage/pill_bottle/kelotane(src)
 	new /obj/item/storage/pill_bottle/spaceacillin(src)
 	new /obj/item/storage/pill_bottle/inaprovaline(src)
@@ -172,42 +173,25 @@
 	new /obj/item/stack/medical/splint(src)
 	new /obj/item/storage/pill_bottle/bicaridine(src)
 	new /obj/item/storage/pill_bottle/dexalin(src)
-	new /obj/item/storage/pill_bottle/antitox(src)
+	new /obj/item/storage/pill_bottle/dylovene(src)
 	new /obj/item/storage/pill_bottle/kelotane(src)
 	new /obj/item/storage/pill_bottle/spaceacillin(src)
 	new /obj/item/storage/pill_bottle/inaprovaline(src)
 	new /obj/item/storage/pill_bottle/tramadol(src)
 	new /obj/item/storage/pill_bottle/peridaxon(src)
 	new /obj/item/storage/pill_bottle/quickclot(src)
+	new /obj/item/storage/pill_bottle/hypervene(src)
 	new /obj/item/reagent_container/hypospray/autoinjector/quickclot(src)
-	new /obj/item/reagent_container/hypospray/autoinjector/dexP(src)
-	new /obj/item/reagent_container/hypospray/autoinjector/dexP(src)
-	new /obj/item/reagent_container/hypospray/autoinjector/Oxycodone(src)
+	new /obj/item/reagent_container/hypospray/autoinjector/dexalinplus(src)
+	new /obj/item/reagent_container/hypospray/autoinjector/dexalinplus(src)
+	new /obj/item/reagent_container/hypospray/autoinjector/oxycodone(src)
+	new /obj/item/reagent_container/hypospray/autoinjector/hypervene(src)
 
 /obj/item/storage/belt/combatLifesaver/upp
+	name ="\improper Type 41 pattern lifesaver bag"
+	desc = "The Type 41 load rig is the standard-issue LBE of the UPP military. This configuration mounts a satchel filled with a range of injectors and light medical supplies, common among medics and partisans."
 	icon_state = "medicalbag_u"
 	item_state = "medicbag_u"
-
-/obj/item/storage/belt/combatLifesaver/upp/New()  //The belt, with all it's magic inside!
-	..()
-	new /obj/item/stack/medical/advanced/bruise_pack(src)
-	new /obj/item/stack/medical/advanced/bruise_pack(src)
-	new /obj/item/stack/medical/advanced/ointment(src)
-	new /obj/item/stack/medical/advanced/ointment(src)
-	new /obj/item/stack/medical/splint(src)
-	new /obj/item/storage/pill_bottle/bicaridine(src)
-	new /obj/item/storage/pill_bottle/dexalin(src)
-	new /obj/item/storage/pill_bottle/antitox(src)
-	new /obj/item/storage/pill_bottle/kelotane(src)
-	new /obj/item/storage/pill_bottle/spaceacillin(src)
-	new /obj/item/storage/pill_bottle/inaprovaline(src)
-	new /obj/item/storage/pill_bottle/tramadol(src)
-	new /obj/item/storage/pill_bottle/peridaxon(src)
-	new /obj/item/reagent_container/hypospray/autoinjector/quickclot(src)
-	new /obj/item/reagent_container/hypospray/autoinjector/quickclot(src)
-	new /obj/item/reagent_container/hypospray/autoinjector/dexP(src)
-	new /obj/item/reagent_container/hypospray/autoinjector/dexP(src)
-	new /obj/item/reagent_container/hypospray/autoinjector/Oxycodone(src)
 
 /obj/item/storage/belt/security
 	name = "\improper M276 pattern security rig"
@@ -226,8 +210,7 @@
 		"/obj/item/clothing/glasses",
 		"/obj/item/ammo_magazine/pistol",
 		"/obj/item/ammo_magazine/handful",
-		"/obj/item/reagent_container/food/snacks/donut/normal",
-		"/obj/item/reagent_container/food/snacks/donut/jelly",
+		"/obj/item/reagent_container/food/snacks/donut",
 		"/obj/item/weapon/baton",
 		"/obj/item/weapon/gun/energy/taser",
 		"/obj/item/tool/lighter/zippo",
@@ -378,7 +361,32 @@
 		new /obj/item/explosive/grenade/frag(src)
 		new /obj/item/explosive/grenade/frag(src)
 
+/obj/item/storage/belt/grenade/b18
+	w_class = 4
+	storage_slots = 16
+	max_w_class = 3
+	max_storage_space = 32
+	can_hold = list("/obj/item/explosive/grenade")
 
+/obj/item/storage/belt/grenade/b18/New()
+	..()
+	spawn(1)
+		new /obj/item/explosive/grenade/incendiary(src)
+		new /obj/item/explosive/grenade/incendiary(src)
+		new /obj/item/explosive/grenade/incendiary(src)
+		new /obj/item/explosive/grenade/incendiary(src)
+		new /obj/item/explosive/grenade/incendiary(src)
+		new /obj/item/explosive/grenade/incendiary(src)
+		new /obj/item/explosive/grenade/incendiary(src)
+		new /obj/item/explosive/grenade/incendiary(src)
+		new /obj/item/explosive/grenade/frag(src)
+		new /obj/item/explosive/grenade/frag(src)
+		new /obj/item/explosive/grenade/frag(src)
+		new /obj/item/explosive/grenade/frag(src)
+		new /obj/item/explosive/grenade/frag(src)
+		new /obj/item/explosive/grenade/frag(src)
+		new /obj/item/explosive/grenade/frag(src)
+		new /obj/item/explosive/grenade/frag(src)
 
 /obj/item/storage/sparepouch
 	name="\improper G8 general utility pouch"
@@ -472,20 +480,6 @@
 				if(!stop_messages) to_chat(usr, "<span class='warning'>[src] can't hold any more magazines.</span>")
 				return
 		return 1
-
-/obj/item/weapon/gun/on_enter_storage(obj/item/storage/belt/gun/gun_belt)
-	if(istype(gun_belt))
-		gun_belt.holds_guns_now++ //Slide it in.
-		if(!gun_belt.current_gun)
-			gun_belt.current_gun = src //If there's no active gun, we want to make this our icon.
-			gun_belt.update_gun_icon()
-
-/obj/item/weapon/gun/on_exit_storage(obj/item/storage/belt/gun/gun_belt)
-	if(istype(gun_belt))
-		gun_belt.holds_guns_now--
-		if(gun_belt.current_gun == src)
-			gun_belt.current_gun = null
-			gun_belt.update_gun_icon()
 
 /obj/item/storage/belt/gun/m4a3
 	name = "\improper M276 pattern M4A3 holster rig"

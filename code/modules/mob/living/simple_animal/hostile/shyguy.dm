@@ -87,7 +87,7 @@
 	for(var/mob/living/carbon/H in viewers(src, null))
 		if(H in shitlist)
 			continue
-		if(H.stat || H.blinded)
+		if(H.stat || is_blind(H))
 			continue
 
 		var/observed = 0
@@ -357,7 +357,7 @@
 		T.gib()
 
 		//Logging stuff
-		T.attack_log += text("\[[time_stamp()]\] <font color='red'>has been torn apart by [src]!</font>")
+		log_combat(src, T, "torn apart")
 		log_admin("[T] ([T.ckey]) has been torn apart by an active [src].")
 		message_admins("ALERT: <A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[T.x];Y=[T.y];Z=[T.z]'>[T.real_name]</a> has been torn apart by an active [src].")
 		shitlist -= T
@@ -455,7 +455,7 @@
 
 /mob/living/simple_animal/shyguy/adjustBruteLoss(var/damage)
 
-	health = Clamp(health - damage, 0, maxHealth)
+	health = CLAMP(health - damage, 0, maxHealth)
 
 	if(damage > 0)
 		staggered += damage

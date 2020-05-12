@@ -3,7 +3,7 @@
 	desc = "A handheld emergency defibrillator, used to restore fibrillating patients. Can optionally bring people back from the dead."
 	icon_state = "defib_full"
 	item_state = "defib"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_item = NOBLUDGEON
 	flags_equip_slot = SLOT_WAIST
 	force = 5
@@ -24,9 +24,9 @@
 		return (FIRELOSS)
 
 /mob/living/carbon/human/proc/check_tod()
-	if(!undefibbable && world.time <= timeofdeath + revive_grace_period)
-		return 1
-	return 0
+	if(!undefibbable && world.time <= timeofdeath + config.revive_grace_period)
+		return TRUE
+	return FALSE
 
 /obj/item/device/defibrillator/New()
 	sparks.set_up(5, 0, src)

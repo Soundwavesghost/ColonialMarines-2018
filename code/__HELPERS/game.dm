@@ -10,14 +10,16 @@
 	return null
 
 /proc/get_area(atom/A)
+	if(isarea(A))
+		return A
 	var/turf/T = get_turf(A)
-	if(T) . = T.loc
+	return T ? T.loc : null
 
-/proc/get_area_name(N) //get area by its name
-	for(var/area/A in all_areas)
-		if(A.name == N)
-			return A
-	return 0
+/proc/get_area_name(atom/X, format_text = FALSE)
+	var/area/A = isarea(X) ? X : get_area(X)
+	if(!A)
+		return null
+	return format_text ? format_text(A.name) : A.name
 
 /proc/in_range(source, user)
 	if(get_dist(source, user) <= 1)
@@ -36,21 +38,6 @@
 	source.luminosity = lum
 
 	return heard
-
-
-
-
-//Magic constants obtained by using linear regression on right-angled triangles of sides 0<x<1, 0<y<1
-//They should approximate pythagoras theorem well enough for our needs.
-#define k1 0.934
-#define k2 0.427
-/proc/cheap_hypotenuse(Ax,Ay,Bx,By) // T is just the second atom to check distance to center with
-	var/dx = abs(Ax - Bx)	//sides of right-angled triangle
-	var/dy = abs(Ay - By)
-	if(dx>=dy)	return (k1*dx) + (k2*dy)	//No sqrt or powers :)
-	else		return (k2*dx) + (k1*dy)
-#undef k1
-#undef k2
 
 /proc/circlerange(center=usr,radius=3)
 
@@ -147,7 +134,7 @@
 			if(sight_check && !isInSight(A, O))
 				continue
 			L |= M
-			//to_chat(world.log, "[recursion_limit] = [M] - [get_turf(M)] - ([M.x], [M.y], [M.z])")
+			//log_world("[recursion_limit] = [M] - [get_turf(M)] - ([M.x], [M.y], [M.z])")
 
 		else if(include_radio && istype(A, /obj/item/device/radio))
 			if(sight_check && !isInSight(A, O))
@@ -177,7 +164,7 @@
 			var/mob/M = A
 			if(M.client)
 				hear += M
-			//to_chat(world.log, "Start = [M] - [get_turf(M)] - ([M.x], [M.y], [M.z])")
+			//log_world("Start = [M] - [get_turf(M)] - ([M.x], [M.y], [M.z])")
 		else if(istype(A, /obj/item/device/radio))
 			hear += A
 
@@ -223,8 +210,6 @@
 					. |= M		// Since we're already looping through mobs, why bother using |= ? This only slows things down.
 	return .
 
-#define SIGN(X) ((X<0)?-1:1)
-
 proc
 	inLineOfSight(X1,Y1,X2,Y2,Z=1,PX1=16.5,PY1=16.5,PX2=16.5,PY2=16.5)
 		var/turf/T
@@ -232,7 +217,7 @@ proc
 			if(Y1==Y2)
 				return 1 //Light cannot be blocked on same tile
 			else
-				var/s = SIGN(Y2-Y1)
+				var/s = (((Y2-Y1)<0)?-1:1)
 				Y1+=s
 				while(Y1!=Y2)
 					T=locate(X1,Y1,Z)
@@ -242,8 +227,8 @@ proc
 		else
 			var/m=(32*(Y2-Y1)+(PY2-PY1))/(32*(X2-X1)+(PX2-PX1))
 			var/b=(Y1+PY1/32-0.015625)-m*(X1+PX1/32-0.015625) //In tiles
-			var/signX = SIGN(X2-X1)
-			var/signY = SIGN(Y2-Y1)
+			var/signX = (((X2-X1)<0)?-1:1)
+			var/signY = (((Y2-Y1)<0)?-1:1)
 			if(X1<X2)
 				b+=m
 			while(X1!=X2 || Y1!=Y2)
@@ -255,7 +240,6 @@ proc
 				if(T.opacity)
 					return 0
 		return 1
-#undef SIGN
 
 proc/isInSight(var/atom/A, var/atom/B)
 	var/turf/Aturf = get_turf(A)
@@ -319,9 +303,17 @@ proc/isInSight(var/atom/A, var/atom/B)
 		if(deathtime < 3000 && ( !O.client.holder || !(O.client.holder.rights & R_ADMIN)) )
 			continue
 
-		// Admins and AFK players cannot be drafted
-		if (O.client.inactivity / 600 > ALIEN_SELECT_AFK_BUFFER + 5 || istype(O.client.holder, /datum/admins))
+		//AFK players cannot be drafted
+		if(O.client.inactivity / 600 > ALIEN_SELECT_AFK_BUFFER + 5)
 			continue
+
+		if(O.client.holder)
+			switch(alert("You have been drafted for xenomorph, do you wish to proceed?",,"Yes","No"))
+				if("Yes")
+					candidates += O.key
+					continue
+				if("No")
+					continue
 
 		candidates += O.key
 

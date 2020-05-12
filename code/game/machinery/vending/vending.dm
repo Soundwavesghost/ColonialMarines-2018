@@ -56,6 +56,7 @@
 	var/panel_open = 0 //Hacking that vending machine. Gonna get a free candy bar.
 	var/wires = 15
 	var/obj/item/coin/coin
+	var/tokensupport = TOKEN_GENERAL
 	var/const/WIRE_EXTEND = 1
 	var/const/WIRE_SCANID = 2
 	var/const/WIRE_SHOCK = 3
@@ -66,6 +67,7 @@
 	var/tipped_level = 0
 	var/hacking_safety = 0 //1 = Will never shoot inventory or allow all access
 	var/wrenchable = TRUE
+	var/isshared = FALSE
 
 /obj/machinery/vending/New()
 	..()
@@ -119,14 +121,14 @@
 		R.amount = amount
 		R.price = price
 
-		if(ispath(typepath,/obj/item/weapon/gun) || ispath(typepath,/obj/item/ammo_magazine) || ispath(typepath,/obj/item/explosive/grenade) || ispath(typepath,/obj/item/weapon/gun/flamer) || ispath(typepath,/obj/item/storage) )
-			R.display_color = "black"
+		if(ispath(typepath,/obj/item/weapon/gun/rifle/m41a) || ispath(typepath,/obj/item/ammo_magazine/rifle) || ispath(typepath,/obj/item/weapon/combat_knife) || ispath(typepath,/obj/item/device/radio/headset/almayer/marine) || ispath(typepath,/obj/item/clothing/gloves/marine) || ispath(typepath,/obj/item/clothing/shoes/marine) || ispath(typepath,/obj/item/clothing/under/marine) || ispath(typepath,/obj/item/storage/backpack/marine/satchel) || ispath(typepath,/obj/item/clothing/suit/storage/marine) || ispath(typepath,/obj/item/storage/belt/marine) || ispath(typepath,/obj/item/storage/pouch/flare) || ispath(typepath,/obj/item/storage/pouch/firstaid) )
+			R.display_color = "white"
 //		else if(ispath(typepath,/obj/item/clothing) || ispath(typepath,/obj/item/storage))
 //			R.display_color = "white"
 //		else if(ispath(typepath,/obj/item/reagent_container) || ispath(typepath,/obj/item/stack/medical))
 //			R.display_color = "blue"
 		else
-			R.display_color = "white"
+			R.display_color = "black"
 
 		if(hidden)
 			R.category=CAT_HIDDEN
@@ -145,6 +147,60 @@
 
 //		to_chat(world, "Added: [R.product_name]] - [R.amount] - [R.product_path]")
 	return
+
+/obj/machinery/vending/attack_alien(mob/living/carbon/Xenomorph/M)
+	if(tipped_level)
+		to_chat(M, "<span class='warning'>There's no reason to bother with that old piece of trash.</span>")
+		return FALSE
+
+	if(M.a_intent == "hurt")
+		M.animation_attack_on(src)
+		if(prob(M.xeno_caste.melee_damage_lower))
+			playsound(loc, 'sound/effects/metalhit.ogg', 25, 1)
+			M.visible_message("<span class='danger'>\The [M] smashes \the [src] beyond recognition!</span>", \
+			"<span class='danger'>You enter a frenzy and smash \the [src] apart!</span>", null, 5)
+			malfunction()
+			return TRUE
+		else
+			M.visible_message("<span class='danger'>[M] slashes \the [src]!</span>", \
+			"<span class='danger'>You slash \the [src]!</span>", null, 5)
+			playsound(loc, 'sound/effects/metalhit.ogg', 25, 1)
+		return TRUE
+
+	M.visible_message("<span class='warning'>\The [M] begins to lean against \the [src].</span>", \
+	"<span class='warning'>You begin to lean against \the [src].</span>", null, 5)
+	tipped_level = 1
+	var/shove_time = 100
+	if(M.mob_size == MOB_SIZE_BIG)
+		shove_time = 50
+	if(istype(M,/mob/living/carbon/Xenomorph/Crusher))
+		shove_time = 15
+	if(do_after(M, shove_time, FALSE, 5, BUSY_ICON_HOSTILE))
+		M.visible_message("<span class='danger'>\The [M] knocks \the [src] down!</span>", \
+		"<span class='danger'>You knock \the [src] down!</span>", null, 5)
+		tip_over()
+	else
+		tipped_level = 0
+
+/obj/structure/inflatable/attack_alien(mob/living/carbon/Xenomorph/M)
+	M.animation_attack_on(src)
+	deflate(1)
+
+/obj/machinery/vending/proc/tip_over()
+	var/matrix/A = matrix()
+	tipped_level = 2
+	density = FALSE
+	A.Turn(90)
+	transform = A
+	malfunction()
+
+/obj/machinery/vending/proc/flip_back()
+	icon_state = initial(icon_state)
+	tipped_level = 0
+	density = TRUE
+	var/matrix/A = matrix()
+	transform = A
+	stat &= ~BROKEN //Remove broken. MAGICAL REPAIRS
 
 /obj/machinery/vending/attackby(obj/item/W, mob/user)
 	if(tipped_level)
@@ -168,9 +224,20 @@
 			attack_hand(user)
 		return
 	else if(istype(W, /obj/item/coin))
-		if(user.drop_inv_item_to_loc(W, src))
-			coin = W
-			to_chat(user, "\blue You insert the [W] into the [src]")
+		var/obj/item/coin/C = W
+		if(coin)
+			to_chat(user, "<span class='warning'>[src] already has [coin] inserted</span>")
+			return
+		if(!premium.len && !isshared)
+			to_chat(user, "<span class='warning'>[src] doesn't have a coin slot.</span>")
+			return
+		if(C.flags_token & tokensupport)
+			if(user.drop_inv_item_to_loc(W, src))
+				coin = W
+				to_chat(user, "\blue You insert the [W] into the [src]")
+		else
+			to_chat(user, "<span class='warning'>\The [src] rejects the [W].</span>")
+			return
 		return
 	else if(istype(W, /obj/item/card))
 		var/obj/item/card/I = W
@@ -205,15 +272,12 @@
 		var/obj/item/card/id/C = I
 		visible_message("<span class='info'>[usr] swipes a card through [src].</span>")
 		var/datum/money_account/CH = get_account(C.associated_account_number)
-		if (CH) // Only proceed if card contains proper account number.
+		if(CH) // Only proceed if card contains proper account number.
 			if(!CH.suspended)
 				if(CH.security_level != 0) //If card requires pin authentication (ie seclevel 1 or 2)
-					if(vendor_account)
-						var/attempt_pin = input("Enter pin code", "Vendor transaction") as num
-						var/datum/money_account/D = attempt_account_access(C.associated_account_number, attempt_pin, 2)
-						transfer_and_vend(D)
-					else
-						to_chat(usr, "\icon[src]<span class='warning'>Unable to access account. Check security settings and try again.</span>")
+					var/attempt_pin = input("Enter pin code", "Vendor transaction") as num
+					var/datum/money_account/D = attempt_account_access(C.associated_account_number, attempt_pin, 2)
+					transfer_and_vend(D)
 				else
 					//Just Vend it.
 					transfer_and_vend(CH)
@@ -229,11 +293,9 @@
 
 			//transfer the money
 			acc.money -= transaction_amount
-			vendor_account.money += transaction_amount
 
 			//create entries in the two account transaction logs
 			var/datum/transaction/T = new()
-			T.target_name = "[vendor_account.owner_name] (via [src.name])"
 			T.purpose = "Purchase of [currently_vending.product_name]"
 			if(transaction_amount > 0)
 				T.amount = "([transaction_amount])"
@@ -243,15 +305,6 @@
 			T.date = current_date_string
 			T.time = worldtime2text()
 			acc.transaction_log.Add(T)
-							//
-			T = new()
-			T.target_name = acc.owner_name
-			T.purpose = "Purchase of [currently_vending.product_name]"
-			T.amount = "[transaction_amount]"
-			T.source_terminal = src.name
-			T.date = current_date_string
-			T.time = worldtime2text()
-			vendor_account.transaction_log.Add(T)
 
 			// Vend the item
 			src.vend(src.currently_vending, usr)
@@ -377,6 +430,7 @@
 		"ewallet_worth" = ewallet ? ewallet.worth : null,
 		"coin" = coin ? coin.name : null,
 		"displayed_records" = display_list,
+		"isshared" = isshared
 	)
 
 	ui = nanomanager.try_update_ui(user, src, ui_key, ui, data, force_open)
@@ -627,7 +681,7 @@
 			icon_state = initial(icon_state)
 		else
 			spawn(rand(0, 15))
-				src.icon_state = "[initial(icon_state)]-off"
+				icon_state = "[initial(icon_state)]-off"
 
 //Oh no we're malfunctioning!  Dump out some product and break.
 /obj/machinery/vending/proc/malfunction()

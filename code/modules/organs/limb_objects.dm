@@ -82,6 +82,8 @@ obj/item/limb/New(loc, mob/living/carbon/human/H)
 	if(istype(H))
 		src.icon_state = H.gender == MALE? "head_m" : "head_f"
 	..()
+	if(H.species.flags & HAS_NO_HAIR)
+		return
 	//Add (facial) hair.
 	if(H.f_style)
 		var/datum/sprite_accessory/facial_hair_style = facial_hair_styles_list[H.f_style]
@@ -157,9 +159,8 @@ obj/item/limb/New(loc, mob/living/carbon/human/H)
 									"<span class='warning'>You sever [brainmob]'s brain's connection to the spine with [W]!</span>")
 				to_chat(brainmob, "<span class='warning'>[user] severs your brain's connection to the spine with [W]!</span>")
 
-				user.attack_log += "\[[time_stamp()]\]<font color='red'> Debrained [brainmob.name] ([brainmob.ckey]) with [W.name] (INTENT: [uppertext(user.a_intent)])</font>"
-				brainmob.attack_log += "\[[time_stamp()]\]<font color='orange'> Debrained by [user.name] ([user.ckey]) with [W.name] (INTENT: [uppertext(user.a_intent)])</font>"
-				msg_admin_attack("[user] ([user.ckey]) debrained [brainmob] ([brainmob.ckey]) (INTENT: [uppertext(user.a_intent)]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
+				log_combat(user, brainmob, "debrained", W, "(INTENT: [uppertext(user.a_intent)])")
+				msg_admin_attack("[key_name(usr)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[usr]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[usr.x];Y=[usr.y];Z=[usr.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[usr]'>FLW</a>) debrained [key_name(brainmob)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[brainmob]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[brainmob.x];Y=[brainmob.y];Z=[brainmob.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[brainmob]'>FLW</a>) (INTENT: [uppertext(user.a_intent)])")
 
 				//TODO: ORGAN REMOVAL UPDATE.
 				var/obj/item/organ/brain/B = new brain_item_type(loc)

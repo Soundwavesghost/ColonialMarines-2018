@@ -6,9 +6,6 @@
 	var/datum/mind/mind
 
 	var/stat = 0 //Whether a mob is alive or dead. TODO: Move this to living - Nodrak
-	var/chatWarn = 0 //Tracks how many times someone has spammed and gives them a no-no timer
-	var/talked = 0 //Won't let someone say something again in under a second.
-
 	var/obj/screen/hands = null //robot
 
 	var/adminhelp_marked = 0 // Prevents marking an Adminhelp more than once. Making this a client define will cause runtimes and break some Adminhelps
@@ -26,7 +23,7 @@
 	var/computer_id = null //to track the players
 	var/lastattacker = null
 	var/lastattacked = null
-	var/attack_log = list( )
+	var/list/logging = list()
 	var/atom/movable/interactee //the thing that the mob is currently interacting with (e.g. a computer, another mob (stripping a mob), manning a hmg)
 	var/poll_answer = 0.0
 	var/sdisabilities = 0	//Carbon
@@ -40,17 +37,12 @@
 	var/eye_blurry = null	//Carbon
 	var/ear_deaf = null		//Carbon
 	var/ear_damage = null	//Carbon
-	var/stuttering = null	//Carbon
-	var/slurring = null		//Carbon
 	var/real_name = null
 	var/flavor_text = ""
 	var/med_record = ""
 	var/sec_record = ""
 	var/gen_record = ""
 	var/exploit_record = ""
-	var/blinded = null
-	var/druggy = 0			//Carbon
-	var/confused = 0		//Carbon
 	var/antitoxs = null
 	var/sleeping = 0		//Carbon
 	var/resting = 0			//Carbon
@@ -76,13 +68,13 @@
 	var/old_y = 0
 	var/drowsyness = 0.0//Carbon
 	var/dizziness = 0//Carbon
-	var/is_dizzy = 0
-	var/is_jittery = 0
 	var/jitteriness = 0//Carbon
 	var/is_floating = 0
 	var/floatiness = 0
 	var/charges = 0.0
 	var/nutrition = 400.0//Carbon
+
+	var/specset //Simple way to track which set has the player taken
 
 	var/overeatduration = 0		// How long this guy is overeating //Carbon
 	var/knocked_out = 0.0
@@ -175,3 +167,8 @@
 	var/list/hud_possible //HUD images that this mob can provide.
 
 	var/action_busy //whether the mob is currently doing an action that takes time (do_after or do_mob procs)
+
+	var/accuracy_modifier = 0 //Applies a penalty or bonus to projectile accuracy in projectile.dm
+	var/scatter_modifier = 0 //Applies a penalty or bonus to scatter probability in gun_system.dm
+
+	var/list/fullscreens = list()

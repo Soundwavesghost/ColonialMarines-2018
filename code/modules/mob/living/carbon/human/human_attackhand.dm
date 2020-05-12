@@ -88,8 +88,7 @@
 			if(!attack.is_usable(M)) attack = M.species.secondary_unarmed
 			if(!attack.is_usable(M)) return
 
-			M.attack_log += text("\[[time_stamp()]\] <font color='red'>[pick(attack.attack_verb)]ed [src.name] ([src.ckey])</font>")
-			attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been [pick(attack.attack_verb)]ed by [M.name] ([M.ckey])</font>")
+			log_combat(M, src, "[pick(attack.attack_verb)]ed")
 			msg_admin_attack("[key_name(M)] [pick(attack.attack_verb)]ed [key_name(src)]")
 
 			M.animation_attack_on(src)
@@ -120,8 +119,7 @@
 
 
 		if("disarm")
-			M.attack_log += text("\[[time_stamp()]\] <font color='red'>Disarmed [src.name] ([src.ckey])</font>")
-			src.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been disarmed by [M.name] ([M.ckey])</font>")
+			log_combat(M, src, "disarmed")
 
 			M.animation_attack_on(src)
 			M.flick_attack_overlay(src, "disarm")
@@ -227,7 +225,8 @@
 
 				if(!status) status = "OK"
 
-				if(org.status & LIMB_SPLINTED) status += " <b>(SPLINTED)</b>"
+				if(org.status & LIMB_SPLINTED)
+					status += " <b>(SPLINTED)</b>"
 				if(org.status & LIMB_MUTATED)
 					status = "weirdly shapen."
 				if(org.status & LIMB_DESTROYED)
@@ -236,34 +235,4 @@
 				to_chat(src, "\t [status=="OK"?"\blue ":"\red "]My [org.display_name] is [status].")
 			if((SKELETON in mutations) && !w_uniform && !wear_suit)
 				play_xylophone()
-		else
-			var/t_him = "it"
-			if (gender == MALE)
-				t_him = "him"
-			else if (gender == FEMALE)
-				t_him = "her"
-			if (w_uniform)
-				w_uniform.add_fingerprint(M)
-
-
-			if(lying || sleeping)
-				if(client)
-					sleeping = max(0,src.sleeping-5)
-				if(!sleeping)
-					resting = 0
-					update_canmove()
-				M.visible_message("<span class='notice'>[M] shakes [src] trying to wake [t_him] up!", \
-									"<span class='notice'>You shake [src] trying to wake [t_him] up!", null, 4)
-			else
-				var/mob/living/carbon/human/H = M
-				if(istype(H))
-					H.species.hug(H,src)
-				else
-					M.visible_message("<span class='notice'>[M] hugs [src] to make [t_him] feel better!</span>", \
-								"<span class='notice'>You hug [src] to make [t_him] feel better!</span>", null, 4)
-
-			AdjustKnockedout(-3)
-			AdjustStunned(-3)
-			AdjustKnockeddown(-3)
-
-			playsound(loc, 'sound/weapons/thudswoosh.ogg', 25, 1, 7)
+	return ..()

@@ -1,7 +1,9 @@
 alexch2 - Admin
 aloraydrel - Admin
+alterist - Admin
 ambassadormagikarp - Admin
 anturke - Admin
+arachnidnexus - Admin
 arianya - Admin
 atlanta-ned - Admin
 bebeyoshi - Admin
@@ -24,12 +26,14 @@ exalted12 - Admin
 excessiveuseofcobby - Admin
 feemjmeem - Admin
 forcefulcjs - Admin
+francinum - Admin
 imsxz - Admin
 incoming - Admin
 ispiria - Admin
 ivanissaccs - Admin
 jazaen - Admin
 jcll - Admin
+jjrcop - Admin
 jordie0608 - Admin
 justicegoat - Admin
 k peculier - Admin
@@ -38,6 +42,7 @@ krusvik - Admin
 laharlmontgommery - Admin
 lazengann - Admin
 lmwevil - Admin
+mattatlas - Admin
 mralphonzo - Admin
 mrstonedone - Admin
 nabski - Admin

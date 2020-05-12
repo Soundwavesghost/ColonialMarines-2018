@@ -3,7 +3,7 @@
 	desc = "What are you standing around staring at this for? Get to killing!"
 	icon_state = "claymore"
 	item_state = "claymore"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_WAIST
 	force = 40
 	throwforce = 10
@@ -26,7 +26,7 @@
 
 /obj/item/weapon/claymore/mercsword/commander
 	name = "Ceremonial Sword"
-	desc = "A fancy ceremonial sword passed down from generation to generation. Despite this, it has been very well cared for, and is in top condition. Has the name 'Chang' printed along the blade."
+	desc = "A fancy ceremonial sword passed down from generation to generation. Despite this, it has been very well cared for, and is in top condition."
 	icon_state = "mercsword"
 	item_state = "machete"
 	force = 65
@@ -35,7 +35,8 @@
 	name = "\improper M2132 machete"
 	desc = "Latest issue of the USCM Machete. Great for clearing out jungle or brush on outlying colonies. Found commonly in the hands of scouts and trackers, but difficult to carry with the usual kit."
 	icon_state = "machete"
-	force = 35
+	force = 40
+	attack_speed = 9
 	w_class = 4.0
 
 /obj/item/weapon/claymore/attack(mob/living/carbon/M as mob, mob/living/carbon/user as mob)
@@ -46,7 +47,7 @@
 	name = "katana"
 	desc = "A finely made Japanese sword, with a well sharpened blade. The blade has been filed to a molecular edge, and is extremely deadly. Commonly found in the hands of mercenaries and yakuza."
 	icon_state = "katana"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	force = 50
 	throwforce = 10
 	sharp = IS_SHARP_ITEM_BIG
@@ -75,13 +76,15 @@
 	icon_state = "combat_knife"
 	item_state = "combat_knife"
 	desc = "The standard issue survival knife issued to Colonial Marines soldiers. You can slide this knife into your boots, and can be field-modified to attach to the end of a rifle."
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	sharp = IS_SHARP_ITEM_ACCURATE
+	matter = list("metal" = 1000)
 	force = 25
 	w_class = 2
 	throwforce = 20
 	throw_speed = 3
 	throw_range = 6
+	attack_speed = 7
 	hitsound = 'sound/weapons/slash.ogg'
 	attack_verb = list("slashed", "stabbed", "sliced", "torn", "ripped", "diced", "cut")
 
@@ -129,7 +132,7 @@
 	icon='icons/obj/items/weapons.dmi'
 	icon_state = "throwing_knife"
 	desc="A military knife designed to be thrown at the enemy. Much quieter than a firearm, but requires a steady hand to be used effectively."
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	sharp = IS_SHARP_ITEM_ACCURATE
 	force = 10
 	w_class = 1

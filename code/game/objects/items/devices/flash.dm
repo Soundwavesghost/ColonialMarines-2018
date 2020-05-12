@@ -7,7 +7,7 @@
 	w_class = 2.0
 	throw_speed = 4
 	throw_range = 10
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	origin_tech = "magnets=2;combat=1"
 
 	var/times_used = 0 //Number of times it's been used.
@@ -36,9 +36,8 @@
 	if(!user || !M)	return	//sanity
 	if(!ishuman(M)) return
 
-	M.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been flashed (attempt) with [src.name]  by [user.name] ([user.ckey])</font>")
-	user.attack_log += text("\[[time_stamp()]\] <font color='red'>Used the [src.name] to flash [M.name] ([M.ckey])</font>")
-	msg_admin_attack("[user.name] ([user.ckey]) Used the [src.name] to flash [M.name] ([M.ckey]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
+	log_combat(user, M, "attempted to flash", src)
+	msg_admin_attack("[key_name(usr)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[usr]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[usr.x];Y=[usr.y];Z=[usr.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[usr]'>FLW</a>) used the [src.name] to flash [key_name(M)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[M]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[M.x];Y=[M.y];Z=[M.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[M]'>FLW</a>)")
 
 	if(user.mind && user.mind.cm_skills && user.mind.cm_skills.police < SKILL_POLICE_FLASH)
 		to_chat(user, "<span class='warning'>You don't seem to know how to use [src]...</span>")
@@ -136,6 +135,7 @@
 			user.show_message("<span class='warning'>*click* *click*</span>", 2)
 			return
 	playsound(src.loc, 'sound/weapons/flash.ogg', 25, 1)
+	user.log_message("flashed an area with [key_name(src)]", LOG_ATTACK)
 	//flick("flash2", src)
 	if(user && isrobot(user))
 		spawn(0)

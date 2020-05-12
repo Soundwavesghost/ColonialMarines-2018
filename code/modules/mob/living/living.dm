@@ -1,12 +1,99 @@
+/mob/living/Life()
+	. = ..()
+
+	if(stat != DEAD)
+
+		handle_status_effects() //all special effects, stun, knockdown, jitteryness, hallucination, sleeping, etc
+
+		handle_regular_hud_updates()
+
+		updatehealth()
+
+//this updates all special effects: knockdown, druggy, stuttering, etc..
+/mob/living/proc/handle_status_effects()
+	if(no_stun)//anti-chainstun flag for alien tackles
+		no_stun = max(0,no_stun - 1) //decrement by 1.
+
+	if(confused)
+		confused = max(0, confused - 1)
+
+	handle_stunned()
+	handle_knocked_down()
+	handle_knocked_out()
+	handle_drugged()
+	handle_stuttering()
+	handle_slurring()
+	handle_silent()
+	handle_disabilities()
+
+/mob/living/proc/handle_stunned()
+	if(stunned)
+		AdjustStunned(-1)
+		if(!stunned && !no_stun) //anti chain stun
+			no_stun = ANTI_CHAINSTUN_TICKS //1 tick reprieve
+	return stunned
+
+/mob/living/proc/handle_knocked_down()
+	if(knocked_down && client)
+		AdjustKnockeddown(-1)	//before you get mad Rockdtben: I done this so update_canmove isn't called multiple times
+		if(!knocked_down && !no_stun) //anti chain stun
+			no_stun = ANTI_CHAINSTUN_TICKS //1 tick reprieve
+	return knocked_down
+
+/mob/living/proc/handle_stuttering()
+	if(stuttering)
+		stuttering = max(stuttering-1, 0)
+	return stuttering
+
+/mob/living/proc/handle_silent()
+	if(silent)
+		silent = max(silent-1, 0)
+	return silent
+
+/mob/living/proc/handle_drugged()
+	if(druggy)
+		adjust_drugginess(-1)
+	return druggy
+
+/mob/living/proc/handle_slurring()
+	if(slurring)
+		slurring = max(slurring-1, 0)
+	return slurring
+
+/mob/living/proc/handle_disabilities()
+	handle_impaired_vision()
+	handle_impaired_hearing()
+
+/mob/living/proc/handle_impaired_vision()
+	//Eyes
+	if(eye_blind)
+		adjust_blindness(-1)
+	if(eye_blurry)			//blurry eyes heal slowly
+		adjust_blurriness(-1)
+
+
+/mob/living/proc/handle_impaired_hearing()
+	//Ears
+	if(ear_damage < 100)
+		adjustEarDamage(-0.05, -1)	// having ear damage impairs the recovery of ear_deaf
+
+/mob/living/proc/handle_regular_hud_updates()
+	if(!client)
+		return FALSE
+
+/mob/living/proc/handle_knocked_out()
+	if(knocked_out)
+		AdjustKnockedout(-1)
+	return knocked_out
 
 /mob/living/proc/updatehealth()
 	if(status_flags & GODMODE)
-		health = maxHealth
-		stat = CONSCIOUS
-	else
-		health = maxHealth - getOxyLoss() - getToxLoss() - getFireLoss() - getBruteLoss() - getCloneLoss() - halloss
+		return
+	health = maxHealth - getOxyLoss() - getToxLoss() - getFireLoss() - getBruteLoss() - getCloneLoss()
+	update_stat()
 
-
+/mob/living/update_stat()
+	update_cloak()
 
 /mob/living/New()
 	..()
@@ -17,6 +104,9 @@
 		cdel(attack_icon)
 		attack_icon = null
 	. = ..()
+
+
+
 
 //This proc is used for mobs which are affected by pressure to calculate the amount of pressure that actually
 //affects them once clothing is factored in. ~Errorage
@@ -227,16 +317,14 @@
 /mob/living/carbon/human/ignore_pull_delay()
 	return has_species(src,"Yautja") //Predators aren't slowed when pulling their prey.
 
-/mob/living/forceMove(atom/destination)
-	stop_pulling()
-	if(pulledby)
-		pulledby.stop_pulling()
-	if(buckled)
-		buckled.unbuckle()
-	. = ..()
-	if(.)
-		reset_view(destination)
+/mob/living/proc/can_inject()
+	return TRUE
 
+/mob/living/is_injectable(allowmobs = TRUE)
+	return (allowmobs && reagents && can_inject())
+
+/mob/living/is_drawable(allowmobs = TRUE)
+	return (allowmobs && reagents && can_inject())
 
 /mob/living/Bump(atom/movable/AM, yes)
 	if(buckled || !yes || now_pushing)
@@ -254,7 +342,7 @@
 
 		if(isXeno(L) && !isXenoLarva(L)) //Handling pushing Xenos in general, but big Xenos and Preds can still push small Xenos
 			var/mob/living/carbon/Xenomorph/X = L
-			if((has_species(src, "Human") && X.mob_size == MOB_SIZE_BIG) || (isXeno(src) && X.mob_size == MOB_SIZE_BIG))
+			if((ishuman(src) && X.mob_size == MOB_SIZE_BIG) || (isXeno(src) && X.mob_size == MOB_SIZE_BIG))
 				if(!isXeno(src) && client)
 					do_bump_delay = 1
 				now_pushing = 0
@@ -262,7 +350,7 @@
 
 		if(isXeno(src) && !isXenoLarva(src) && ishuman(L)) //We are a Xenomorph and pushing a human
 			var/mob/living/carbon/Xenomorph/X = src
-			if(has_species(L, "Human") && X.mob_size == MOB_SIZE_BIG)
+			if(X.mob_size == MOB_SIZE_BIG)
 				L.do_bump_delay = 1
 
 		if(L.pulledby && L.pulledby != src && L.is_mob_restrained())
@@ -383,7 +471,9 @@
 		attack_icon.pixel_y = new_pix_y
 
 
-
+//used in datum/reagents/reaction() proc
+/mob/living/proc/get_permeability_protection()
+	return LIVING_PERM_COEFF
 
 /mob/proc/flash_eyes()
 	return
@@ -395,4 +485,93 @@
 			clear_fullscreen("flash", 20)
 		return 1
 
+/mob/living/proc/smokecloak_on()
 
+	if(smokecloaked)
+		return
+
+	alpha = 5 // bah, let's make it better, it's a disposable device anyway
+
+	if(!isXeno(src)||!isanimal(src))
+		var/datum/mob_hud/security/advanced/SA = huds[MOB_HUD_SECURITY_ADVANCED]
+		SA.remove_from_hud(src)
+		var/datum/mob_hud/xeno_infection/XI = huds[MOB_HUD_XENO_INFECTION]
+		XI.remove_from_hud(src)
+
+	smokecloaked = TRUE
+
+/mob/living/proc/smokecloak_off()
+
+	if(!smokecloaked)
+		return
+
+	alpha = initial(alpha)
+
+	if(!isXeno(src)|| !isanimal(src))
+		var/datum/mob_hud/security/advanced/SA = huds[MOB_HUD_SECURITY_ADVANCED]
+		SA.add_to_hud(src)
+		var/datum/mob_hud/xeno_infection/XI = huds[MOB_HUD_XENO_INFECTION]
+		XI.add_to_hud(src)
+
+	smokecloaked = FALSE
+
+/mob/living/proc/update_cloak()
+	if(!smokecloaked)
+		return
+
+	var/obj/effect/particle_effect/smoke/tactical/S = locate() in loc
+	if(S)
+		return
+	else
+		smokecloak_off()
+
+/mob/living/proc/do_jitter_animation(jitteriness)
+	var/amplitude = min(4, (jitteriness/100) + 1)
+	var/pixel_x_diff = rand(-amplitude, amplitude)
+	var/pixel_y_diff = rand(-amplitude/3, amplitude/3)
+	var/final_pixel_x = get_standard_pixel_x_offset(lying)
+	var/final_pixel_y = get_standard_pixel_y_offset(lying)
+	animate(src, pixel_x = pixel_x + pixel_x_diff, pixel_y = pixel_y + pixel_y_diff , time = 2, loop = 6)
+	animate(pixel_x = final_pixel_x , pixel_y = final_pixel_y , time = 2)
+
+/mob/living/proc/get_standard_pixel_x_offset(lying = 0)
+	return initial(pixel_x)
+
+/mob/living/proc/get_standard_pixel_y_offset(lying = 0)
+	return initial(pixel_y)
+
+/*
+adds a dizziness amount to a mob
+use this rather than directly changing var/dizziness
+since this ensures that the dizzy_process proc is started
+currently only humans get dizzy
+value of dizziness ranges from 0 to 1000
+below 100 is not dizzy
+*/
+
+/mob/living/carbon/Dizzy(var/amount)
+	dizziness = CLAMP(dizziness + amount, 0, 1000)
+
+	if(dizziness > 100 && !is_dizzy)
+		spawn(0)
+			dizzy_process()
+
+/mob/living/proc/dizzy_process()
+	is_dizzy = TRUE
+	while(dizziness > 100)
+		if(client)
+			var/amplitude = dizziness*(sin(dizziness * 0.044 * world.time) + 1) / 70
+			client.pixel_x = amplitude * sin(0.008 * dizziness * world.time)
+			client.pixel_y = amplitude * cos(0.008 * dizziness * world.time)
+
+		sleep(1)
+	//endwhile - reset the pixel offsets to zero
+	is_dizzy = FALSE
+	if(client)
+		client.pixel_x = 0
+		client.pixel_y = 0
+
+/mob/living/proc/update_action_button_icons()
+	for(var/X in actions)
+		var/datum/action/A = X
+		A.update_button_icon()

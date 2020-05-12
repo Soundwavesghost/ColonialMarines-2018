@@ -1,5 +1,5 @@
-#define SAVEFILE_VERSION_MIN	8
-#define SAVEFILE_VERSION_MAX	12
+#define SAVEFILE_VERSION_MIN	12
+#define SAVEFILE_VERSION_MAX	16
 
 //handles converting savefiles to new formats
 //MAKE SURE YOU KEEP THIS UP TO DATE!
@@ -20,11 +20,14 @@
 				break
 		return 0
 
-	if(savefile_version < 12) //we've split toggles into toggles_sound and toggles_chat
+	if(savefile_version < 16) //we've split toggles into toggles_sound and toggles_chat
 //		if(S["toggles"])
 //			cdel(S["toggles"])
-		S["toggles_chat"] << TOGGLES_SOUND_DEFAULT
-		S["toggles_chat"] << TOGGLES_CHAT_DEFAULT
+
+		S["ghost_medhud"]		<< 1
+		S["ghost_sechud"] 		<< 0
+		S["ghost_squadhud"] 	<< 1
+		S["ghost_xenohud"] 		<< 1
 
 	savefile_version = SAVEFILE_VERSION_MAX
 	return 1
@@ -70,10 +73,15 @@
 	S["pred_armor_type"]	>> predator_armor_type
 	S["pred_boot_type"]		>> predator_boot_type
 
+	S["ghost_medhud"]		>> ghost_medhud
+	S["ghost_sechud"] 		>> ghost_sechud
+	S["ghost_squadhud"] 	>> ghost_squadhud
+	S["ghost_xenohud"] 		>> ghost_xenohud
+
 	//Sanitize
 	ooccolor		= sanitize_hexcolor(ooccolor, initial(ooccolor))
 	lastchangelog	= sanitize_text(lastchangelog, initial(lastchangelog))
-	UI_style		= sanitize_inlist(UI_style, list("White", "Midnight","Orange","old"), initial(UI_style))
+	UI_style		= sanitize_inlist(UI_style, list("White", "Midnight","Orange","old","Slimecore","Operative","Clockwork"), initial(UI_style))
 	be_special		= sanitize_integer(be_special, 0, 65535, initial(be_special))
 	default_slot	= sanitize_integer(default_slot, 1, MAX_SAVE_SLOTS, initial(default_slot))
 	toggles_chat	= sanitize_integer(toggles_chat, 0, 65535, initial(toggles_chat))
@@ -89,6 +97,11 @@
 	predator_mask_type 	= sanitize_integer(predator_mask_type,1,1000000,initial(predator_mask_type))
 	predator_armor_type = sanitize_integer(predator_armor_type,1,1000000,initial(predator_armor_type))
 	predator_boot_type 	= sanitize_integer(predator_boot_type,1,1000000,initial(predator_boot_type))
+
+	ghost_medhud    = sanitize_integer(ghost_medhud,0,1,initial(ghost_medhud))
+	ghost_sechud    = sanitize_integer(ghost_sechud,0,1,initial(ghost_sechud))
+	ghost_squadhud  = sanitize_integer(ghost_squadhud,0,1,initial(ghost_squadhud))
+	ghost_xenohud   = sanitize_integer(ghost_xenohud,0,1,initial(ghost_xenohud))
 
 	return 1
 
@@ -118,6 +131,11 @@
 	S["pred_armor_type"] 	<< predator_armor_type
 	S["pred_boot_type"] 	<< predator_boot_type
 
+	S["ghost_medhud"]		<< ghost_medhud
+	S["ghost_sechud"] 		<< ghost_sechud
+	S["ghost_squadhud"] 	<< ghost_squadhud
+	S["ghost_xenohud"] 		<< ghost_xenohud
+
 	return 1
 
 /datum/preferences/proc/load_character(slot)
@@ -141,6 +159,7 @@
 	S["age"]				>> age
 	S["ethnicity"]			>> ethnicity
 	S["body_type"]			>> body_type
+	S["species"]			>> species
 	S["language"]			>> language
 	S["spawnpoint"]			>> spawnpoint
 
@@ -163,6 +182,9 @@
 	S["undershirt"]			>> undershirt
 	S["backbag"]			>> backbag
 	//S["b_type"]				>> b_type
+
+	//Species specific
+	S["moth_wings"]			>> moth_wings
 
 	//Jobs
 	S["alternate_option"]	>> alternate_option
@@ -224,12 +246,12 @@
 	if(isnull(language)) language = "None"
 	if(isnull(spawnpoint)) spawnpoint = "Arrivals Shuttle"
 	if(isnull(nanotrasen_relation)) nanotrasen_relation = initial(nanotrasen_relation)
-	if(!real_name) real_name = random_name(gender)
 	be_random_name	= sanitize_integer(be_random_name, 0, 1, initial(be_random_name))
 	gender			= sanitize_gender(gender)
 	age				= sanitize_integer(age, AGE_MIN, AGE_MAX, initial(age))
 	ethnicity		= sanitize_ethnicity(ethnicity)
 	body_type		= sanitize_body_type(body_type)
+	species			= (species in all_species) ? species : DEFAULT_SPECIES
 	r_hair			= sanitize_integer(r_hair, 0, 255, initial(r_hair))
 	g_hair			= sanitize_integer(g_hair, 0, 255, initial(g_hair))
 	b_hair			= sanitize_integer(b_hair, 0, 255, initial(b_hair))
@@ -244,10 +266,15 @@
 	r_eyes			= sanitize_integer(r_eyes, 0, 255, initial(r_eyes))
 	g_eyes			= sanitize_integer(g_eyes, 0, 255, initial(g_eyes))
 	b_eyes			= sanitize_integer(b_eyes, 0, 255, initial(b_eyes))
-	underwear		= sanitize_integer(underwear, 1, underwear_m.len, initial(underwear))
+	if(gender == MALE)
+		underwear		= sanitize_integer(underwear, 1, underwear_m.len, initial(underwear))
+	else
+		underwear		= sanitize_integer(underwear, 1, underwear_f.len, initial(underwear))
 	undershirt		= sanitize_integer(undershirt, 1, undershirt_t.len, initial(undershirt))
 	backbag			= sanitize_integer(backbag, 1, backbaglist.len, initial(backbag))
 	//b_type			= sanitize_text(b_type, initial(b_type))
+
+	moth_wings		= (moth_wings in moth_wings_list) ? moth_wings : "Plain" // Dear CM coders, why do you have sanitize functions that are the equivalent of a ternary?
 
 	alternate_option = sanitize_integer(alternate_option, 0, 2, initial(alternate_option))
 	job_command_high = sanitize_integer(job_command_high, 0, 65535, initial(job_command_high))
@@ -263,6 +290,9 @@
 	job_marines_med = sanitize_integer(job_marines_med, 0, 65535, initial(job_marines_med))
 	job_marines_low = sanitize_integer(job_marines_low, 0, 65535, initial(job_marines_low))
 
+	if(!real_name)
+		var/datum/species/Species = all_species[species]
+		real_name = Species.random_name(gender)
 	if(!skills) skills = list()
 	if(!used_skillpoints) used_skillpoints= 0
 	if(isnull(disabilities)) disabilities = 0
@@ -293,6 +323,7 @@
 	S["age"]				<< age
 	S["ethnicity"]			<< ethnicity
 	S["body_type"]			<< body_type
+	S["species"]			<< species
 	S["language"]			<< language
 	S["hair_red"]			<< r_hair
 	S["hair_green"]			<< g_hair
@@ -313,6 +344,9 @@
 	S["backbag"]			<< backbag
 	//S["b_type"]				<< b_type
 	S["spawnpoint"]			<< spawnpoint
+
+	// Species specific
+	S["moth_wings"]			<< moth_wings
 
 	//Jobs
 	S["alternate_option"]	<< alternate_option

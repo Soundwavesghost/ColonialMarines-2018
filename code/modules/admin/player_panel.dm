@@ -1,6 +1,6 @@
 
 /datum/admins/proc/player_panel_new()//The new one
-	if (!usr.client.holder)
+	if(!usr.client.holder.rights & (R_ADMIN|R_MOD))
 		return
 	var/dat = "<html><head><title>Admin Player Panel</title></head>"
 
@@ -82,7 +82,9 @@
 					body += "<a href='?src=\ref[src];traitor="+ref+"'>TP</a> - "
 					body += "<a href='?src=\ref[usr];priv_msg=\ref"+ref+"'>PM</a> - "
 					body += "<a href='?src=\ref[src];subtlemessage="+ref+"'>SM</a> - "
-					body += "<a href='?src=\ref[src];adminplayerobservejump="+ref+"'>JMP</a><br>"
+					body += "<a href='?src=\ref[src];adminplayerobservejump="+ref+"'>JMP</a> - "
+					body += "<a href='?src=\ref[src];adminplayerfollow="+ref+"'>FLW</a><br>"
+					body += "<a href='?src=\ref[src];individuallog="+ref+"'>LOGS</a><br>"
 					if(antagonist > 0)
 						body += "<font size='2'><a href='?src=\ref[src];check_antagonist=1'><font color='red'><b>Antagonist</b></font></a></font>";
 
@@ -385,11 +387,11 @@
 
 //Extended panel with ban related things
 /datum/admins/proc/player_panel_extended()
-	if (!usr.client.holder)
+	if(!usr.client.holder.rights & (R_ADMIN|R_MOD))
 		return
 
 	var/dat = "<html><head><title>Player Menu</title></head>"
-	dat += "<body><table border=1 cellspacing=5><B><tr><th>Key</th><th>Name</th><th>Real Name</th><th>PP</th><th>CID</th><th>IP</th><th>JMP</th><th>Notes</th></tr></B>"
+	dat += "<body><table border=1 cellspacing=5><B><tr><th>Key</th><th>Name</th><th>Real Name</th><th>PP</th><th>CID</th><th>IP</th><th>JMP</th><th>FLW</th><th>Notes</th></tr></B>"
 	//add <th>IP:</th> to this if wanting to add back in IP checking
 	//add <td>(IP: [M.lastKnownIP])</td> if you want to know their ip to the lists below
 	var/list/mobs = sortmobs()
@@ -421,6 +423,7 @@
 		<td>[M.computer_id]</td>
 		<td>[M.lastKnownIP]</td>
 		<td><a href='?src=\ref[src];adminplayerobservejump=\ref[M]'>JMP</a></td>
+		<td><A HREF='?_src_=\ref[src];adminplayerfollow=\ref[M]'>FLW</a></td>
 		<td><a href='?src=\ref[src];notes=show;mob=\ref[M]'>Notes</a></td>
 		"}
 
@@ -436,11 +439,11 @@
 		dat += "Current Game Mode: <B>[ticker.mode.name]</B><BR>"
 		dat += "Round Duration: <B>[round(world.time / 36000)]:[add_zero(world.time / 600 % 60, 2)]:[world.time / 100 % 6][world.time / 100 % 10]</B><BR>"
 
-		if(check_rights(R_DEBUG))
+		if(check_rights(R_DEBUG, FALSE))
 			dat += "<br><A HREF='?_src_=vars;Vars=\ref[EvacuationAuthority]'>VV Evacuation Controller</A><br>"
 			dat += "<A HREF='?_src_=vars;Vars=\ref[shuttle_controller]'>VV Shuttle Controller</A><br><br>"
 
-		if(check_rights(R_MOD))
+		if(check_rights(R_MOD, FALSE))
 			dat += "<b>Evacuation:</b> "
 			switch(EvacuationAuthority.evac_status)
 				if(EVACUATION_STATUS_STANDING_BY) dat += 	"STANDING BY"
@@ -451,9 +454,10 @@
 			dat += "<a href='?src=\ref[src];evac_authority=init_evac'>Initiate Evacuation</a><br>"
 			dat += "<a href='?src=\ref[src];evac_authority=cancel_evac'>Cancel Evacuation</a><br>"
 			dat += "<a href='?src=\ref[src];evac_authority=toggle_evac'>Toggle Evacuation Permission (does not affect evac in progress)</a><br>"
-			if(check_rights(R_ADMIN)) dat += "<a href='?src=\ref[src];evac_authority=force_evac'>Force Evacuation Now</a><br>"
+			if(check_rights(R_ADMIN, FALSE))
+				dat += "<a href='?src=\ref[src];evac_authority=force_evac'>Force Evacuation Now</a><br>"
 
-		if(check_rights(R_ADMIN))
+		if(check_rights(R_ADMIN, FALSE))
 			dat += "<b>Self Destruct:</b> "
 			switch(EvacuationAuthority.dest_status)
 				if(NUKE_EXPLOSION_INACTIVE) dat += 		"INACTIVE"

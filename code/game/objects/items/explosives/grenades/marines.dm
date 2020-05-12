@@ -120,12 +120,17 @@
 			cdel(src)
 		return
 
-proc/flame_radius(radius = 1, turf/turf) //~Art updated fire.
-	if(!turf || !isturf(turf)) return
-	if(radius < 0) radius = 0
-	if(radius > 5) radius = 5
-	new /obj/flamer_fire(turf, 5 + rand(0,11), 15, null, radius)
-
+proc/flame_radius(radius = 1, turf/T, burn_intensity = 25, burn_duration = 25, burn_damage = 25, fire_stacks = 15, int_var = 0.5, dur_var = 0.5, colour = "red") //~Art updated fire.
+	if(!T || !isturf(T))
+		return
+	radius = CLAMP(radius, 1, 7) //Sterilize inputs
+	int_var = CLAMP(int_var, 0.1,0.5)
+	dur_var = CLAMP(int_var, 0.1,0.5)
+	fire_stacks = rand(burn_damage*(0.5-int_var),burn_damage*(0.5+int_var) ) + rand(burn_damage*(0.5-int_var),burn_damage*(0.5+int_var) )
+	burn_damage = rand(burn_damage*(0.5-int_var),burn_damage*(0.5+int_var) ) + rand(burn_damage*(0.5-int_var),burn_damage*(0.5+int_var) )
+	for(var/obj/flamer_fire/F in range(radius,T)) // No stacking flames!
+		cdel(F)
+	new /obj/flamer_fire(T, rand(burn_intensity*(0.5-int_var), burn_intensity*(0.5+int_var)) + rand(burn_intensity*(0.5-int_var), burn_intensity*(0.5+int_var)), rand(burn_duration*(0.5-int_var), burn_duration*(0.5-int_var)) + rand(burn_duration*(0.5-int_var), burn_duration*(0.5-int_var)), colour, radius, burn_damage, fire_stacks) //Gaussian.
 
 /obj/item/explosive/grenade/incendiary/molotov
 	name = "\improper improvised firebomb"
@@ -164,6 +169,26 @@ proc/flame_radius(radius = 1, turf/turf) //~Art updated fire.
 	prime()
 		playsound(src.loc, 'sound/effects/smoke.ogg', 25, 1, 4)
 		smoke.set_up(3, 0, usr.loc, null, 6)
+		smoke.start()
+		cdel(src)
+
+/obj/item/explosive/grenade/cloakbomb
+	name = "\improper M40-2 SCDP smoke grenade"
+	desc = "A sophisticated version of the M40 HSDP with an improved smoke screen payload, currently being field-tested in the USCM. It's set to detonate in 2 seconds."
+	icon_state = "grenade_cloak"
+	det_time = 20
+	item_state = "grenade_cloak"
+	underslug_launchable = TRUE
+	var/datum/effect_system/smoke_spread/tactical/smoke
+
+	New()
+		..()
+		smoke = new /datum/effect_system/smoke_spread/tactical
+		smoke.attach(src)
+
+	prime()
+		playsound(src.loc, 'sound/effects/smoke.ogg', 25, 1, 4)
+		smoke.set_up(3, 0, usr.loc, null, 7)
 		smoke.start()
 		cdel(src)
 

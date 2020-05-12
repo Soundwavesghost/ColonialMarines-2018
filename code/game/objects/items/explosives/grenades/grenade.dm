@@ -7,7 +7,7 @@
 	item_state = "flashbang"
 	throw_speed = 3
 	throw_range = 7
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_WAIST
 	hitsound = 'sound/weapons/smash.ogg'
 	var/active = 0
@@ -28,6 +28,12 @@
 		if(!user.IsAdvancedToolUser())
 			to_chat(user, "<span class='warning'>You don't have the dexterity to do this!</span>")
 			return
+
+		if(ishuman(user))
+			var/mob/living/carbon/human/S = user
+			if(S.species.flags & IS_SYNTHETIC)
+				to_chat(user, "<span class='warning'>Your programming prevents you from operating this device!</span>")
+				return
 
 		add_fingerprint(user)
 		activate(user)
@@ -53,7 +59,7 @@
 		return
 
 	if(user)
-		msg_admin_attack("[user.name] ([user.ckey]) primed \a [src] (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
+		msg_admin_attack("[key_name(usr)] (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[usr.x];Y=[usr.y];Z=[usr.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[usr]'>FLW</a>) (<A HREF='?_src_=holder;adminmoreinfo=\ref[usr]'>?</A>) primed \a [src].")
 
 	icon_state = initial(icon_state) + "_active"
 	active = 1

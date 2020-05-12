@@ -8,7 +8,7 @@
 		if(!I)
 			to_chat(H, "<span class='notice'>You are not holding anything to equip.</span>")
 			return
-		if(H.equip_to_appropriate_slot(I, 0))
+		if(H.equip_to_appropriate_slot(I, FALSE))
 			if(hand)
 				update_inv_l_hand(0)
 			else
@@ -48,7 +48,7 @@
 		if(WEAR_WAIST)
 			return has_limb("chest")
 		if(WEAR_ID)
-			return 1
+			return TRUE
 		if(WEAR_EAR)
 			return has_limb("head")
 		if(WEAR_EYES)
@@ -71,12 +71,26 @@
 			return has_limb("chest")
 		if(WEAR_ACCESSORY)
 			return has_limb("chest")
+		if(EQUIP_IN_BOOT)
+			return has_limb("r_foot") && has_limb("l_foot")
 		if(WEAR_IN_BACK)
-			return 1
+			return has_limb("chest")
 		if(WEAR_IN_JACKET)
-			return 1
+			return has_limb("chest")
 		if(WEAR_IN_ACCESSORY)
-			return 1
+			return has_limb("chest")
+		if(WEAR_IN_HOLSTER)
+			return has_limb("chest")
+		if(WEAR_IN_J_HOLSTER)
+			return has_limb("chest")
+		if(WEAR_IN_B_HOLSTER)
+			return has_limb("chest")
+		if(EQUIP_IN_STORAGE)
+			return TRUE
+		if(EQUIP_IN_L_POUCH)
+			return has_limb("chest")
+		if(EQUIP_IN_R_POUCH)
+			return has_limb("chest")
 
 /mob/living/carbon/human/put_in_l_hand(obj/item/W)
 	var/datum/limb/O = get_limb("l_hand")
@@ -142,8 +156,11 @@
 		update_inv_gloves()
 	else if (I == glasses)
 		glasses = null
-		update_tint()
-		update_glass_vision(I)
+		var/obj/item/clothing/glasses/G = I
+		if(G.vision_flags || G.darkness_view || G.see_invisible)
+			update_sight()
+		if(G.tint)
+			update_tint()
 		update_inv_glasses()
 	else if (I == wear_ear)
 		wear_ear = null
@@ -198,9 +215,12 @@
 //This is an UNSAFE proc. Use mob_can_equip() before calling this one! Or rather use equip_to_slot_if_possible() or advanced_equip_to_slot_if_possible()
 //set redraw_mob to 0 if you don't wish the hud to be updated - if you're doing it manually in your own proc.
 /mob/living/carbon/human/equip_to_slot(obj/item/W as obj, slot)
-	if(!slot) return
-	if(!istype(W)) return
-	if(!has_limb_for_slot(slot)) return
+	if(!slot)
+		return
+	if(!istype(W))
+		return
+	if(!has_limb_for_slot(slot))
+		return
 
 	if(W == l_hand)
 		l_hand = null
@@ -266,8 +286,11 @@
 		if(WEAR_EYES)
 			glasses = W
 			W.equipped(src, slot)
-			update_tint()
-			update_glass_vision(W)
+			var/obj/item/clothing/glasses/G = W
+			if(G.vision_flags || G.darkness_view || G.see_invisible)
+				update_sight()
+			if(G.tint)
+				update_tint()
 			update_inv_glasses()
 		if(WEAR_HANDS)
 			gloves = W
@@ -326,25 +349,43 @@
 			s_store = W
 			W.equipped(src, slot)
 			update_inv_s_store()
+		if(EQUIP_IN_BOOT)
+			var/obj/item/clothing/shoes/marine/B = shoes
+			B.attackby(W, src)
 		if(WEAR_IN_BACK)
-			if(get_active_hand() == W)
-				temp_drop_inv_item(W)
-			W.forceMove(back)
+			var/obj/item/storage/S = back
+			S.handle_item_insertion(W, TRUE, src)
 		if(WEAR_IN_JACKET)
 			var/obj/item/clothing/suit/storage/S = wear_suit
-			if(istype(S) && S.pockets.storage_slots) W.loc = S.pockets//Has to have some slots available.
-
+			if(istype(S) && S.pockets.storage_slots)
+				W.loc = S.pockets//Has to have some slots available.
 		if(WEAR_IN_ACCESSORY)
 			var/obj/item/clothing/under/U = w_uniform
 			if(U && U.hastie)
 				var/obj/item/clothing/tie/storage/T = U.hastie
 				if(istype(T) && T.hold.storage_slots) W.loc = T.hold
-
+		if(WEAR_IN_HOLSTER)
+			var/obj/item/storage/S = belt
+			S.handle_item_insertion(W, FALSE, src)
+		if(WEAR_IN_B_HOLSTER)
+			var/obj/item/storage/S = back
+			S.handle_item_insertion(W, FALSE, src)
+		if(WEAR_IN_J_HOLSTER)
+			var/obj/item/storage/S = s_store
+			S.handle_item_insertion(W, FALSE, src)
+		if(EQUIP_IN_STORAGE)
+			var/obj/item/storage/S = s_active
+			S.handle_item_insertion(W, FALSE, src)
+		if(EQUIP_IN_L_POUCH)
+			var/obj/item/storage/S = l_store
+			S.handle_item_insertion(W, FALSE, src)
+		if(EQUIP_IN_R_POUCH)
+			var/obj/item/storage/S = r_store
+			S.handle_item_insertion(W, FALSE, src)
 		else
 			to_chat(src, "\red You are trying to eqip this item to an unsupported inventory slot. How the heck did you manage that? Stop it...")
 			return
-
-	return 1
+	return TRUE
 
 
 
@@ -401,8 +442,7 @@
 	if(I.flags_inventory & CANTSTRIP)
 		to_chat(src, "<span class='warning'>You're having difficulty removing \the [I.name].</span>")
 		return
-	M.attack_log += "\[[time_stamp()]\] <font color='orange'>Has had their [I.name] ([slot_to_process]) attempted to be removed by [name] ([ckey])</font>"
-	attack_log += "\[[time_stamp()]\] <font color='red'>Attempted to remove [M.name]'s ([M.ckey]) [I.name] ([slot_to_process])</font>"
+	log_combat(src, M, "attempted to remove [key_name(I)] ([slot_to_process])")
 
 	M.visible_message("<span class='danger'>[src] tries to remove [M]'s [I.name].</span>", \
 					"<span class='userdanger'>[src] tries to remove [M]'s [I.name].</span>", null, 5)
@@ -434,9 +474,6 @@
 					drop_inv_item_on_ground(I)
 					if(I && !I.disposed) //Might be self-deleted?
 						M.equip_to_slot_if_possible(I, slot_to_process, 1, 0, 1, 1)
-						if(ishuman(M) && M.stat == DEAD)
-							var/mob/living/carbon/human/H = M
-							H.disable_lights() // take that powergamers -spookydonut
 
 	if(M)
 		if(interactee == M && Adjacent(M))

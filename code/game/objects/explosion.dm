@@ -47,7 +47,7 @@
 						//You hear a far explosion if you're outside the blast radius. Small bombs shouldn't be heard all over the station.
 
 					else if(dist <= far_dist)
-						var/far_volume = Clamp(far_dist, 30, 50) // Volume is based on explosion size and dist
+						var/far_volume = CLAMP(far_dist, 30, 50) // Volume is based on explosion size and dist
 						far_volume += (dist <= far_dist * 0.5 ? 75 : 75) // add 50 volume if the mob is pretty close to the explosion
 						M.playsound_local(epicenter, 'sound/effects/explosionfar.ogg', far_volume, 1, frequency, falloff = 5)
 
@@ -110,7 +110,7 @@
 
 		var/took = (world.timeofday-start)/10
 		//You need to press the DebugGame verb to see these now....they were getting annoying and we've collected a fair bit of data. Just -test- changes  to explosion code using this please so we can compare
-		if(Debug2)	to_chat(world.log, "## DEBUG: Explosion([x0],[y0],[z0])(d[devastation_range],h[heavy_impact_range],l[light_impact_range]): Took [took] seconds.")
+		if(Debug2)	log_world("## DEBUG: Explosion([x0],[y0],[z0])(d[devastation_range],h[heavy_impact_range],l[light_impact_range]): Took [took] seconds.")
 
 		//Machines which report explosions.
 //		for(var/i,i<=doppler_arrays.len,i++)

@@ -25,7 +25,7 @@
 	flags_equip_slot = SLOT_WAIST
 	force = 10
 
-/obj/item/weapon/classic_baton/attack(mob/M as mob, mob/living/user as mob)
+/obj/item/weapon/classic_baton/attack(mob/living/M as mob, mob/living/user as mob)
 	if ((CLUMSY in user.mutations) && prob(50))
 		to_chat(user, "\red You club yourself over the head.")
 		user.KnockDown(3 * force)
@@ -37,10 +37,8 @@
 		return
 /*this is already called in ..()
 	src.add_fingerprint(user)
-	M.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been attacked with [src.name] by [user.name] ([user.ckey])</font>")
-	user.attack_log += text("\[[time_stamp()]\] <font color='red'>Used the [src.name] to attack [M.name] ([M.ckey])</font>")
 
-	log_attack("<font color='red'>[user.name] ([user.ckey]) attacked [M.name] ([M.ckey]) with [src.name] (INTENT: [uppertext(user.a_intent)])</font>")
+	log_combat(user, M, "attacked", src, "(INTENT: [uppertext(user.a_intent)])")
 */
 
 	if(!..()) return
@@ -72,7 +70,7 @@
 		icon_state = "telebaton_1"
 		item_state = "telebaton_1"
 		w_class = 3
-		force = 50//Super Robust - Probably shouldn't give it to anyone who isn't staff unless you want BEATINGS
+		force = 10
 		attack_verb = list("smacked", "struck", "slapped")
 	else
 		user.visible_message("\blue [user] collapses their telescopic baton.",\
@@ -111,9 +109,10 @@
 			user.KnockDown(3 * force)
 			if(ishuman(user))
 				var/mob/living/carbon/human/H = user
-				H.apply_damage(2*force, BRUTE, "head")
+				H.apply_damage(force, BRUTE, "head")
+				H.apply_damage(force, HALLOSS, "head")
 			else
-				user.take_limb_damage(2*force)
+				user.take_limb_damage(force * 2)
 			return
 		if(..())
 			//playsound(src.loc, "swing_hit", 25, 1, 6)

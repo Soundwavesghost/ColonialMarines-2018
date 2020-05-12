@@ -17,11 +17,11 @@
 	for(var/file in args)
 		src << browse_rsc(file)
 
-/client/proc/browse_files(root="data/logs/", max_iterations=10, list/valid_extensions=list(".txt",".log",".htm"))
+/client/proc/browse_files(root="data/logs/", max_iterations=10, list/valid_extensions=list("txt","log","htm", "html"))
 	var/path = root
 
 	for(var/i=0, i<max_iterations, i++)
-		var/list/choices = sortList(flist(path))
+		var/list/choices = flist(path)
 		if(path != root)
 			choices.Insert(1,"/")
 
@@ -36,15 +36,19 @@
 
 		if(copytext(path,-1,0) != "/")		//didn't choose a directory, no need to iterate again
 			break
-
-	var/extension = copytext(path,-4,0)
-	if( !fexists(path) || !(extension in valid_extensions) )
+	var/extensions
+	for(var/i in valid_extensions)
+		if(extensions)
+			extensions += "|"
+		extensions += "[i]"
+	var/regex/valid_ext = new("\\.([extensions])$", "i")
+	if( !fexists(path) || !(valid_ext.Find(path)) )
 		to_chat(src, "<font color='red'>Error: browse_files(): File not found/Invalid file([path]).</font>")
 		return
 
 	return path
 
-#define FTPDELAY 200	//200 tick delay to discourage spam
+#define FTPDELAY 50	//50 tick delay to discourage spam
 /*	This proc is a failsafe to prevent spamming of file requests.
 	It is just a timer that only permits a download every [FTPDELAY] ticks.
 	This can be changed by modifying FTPDELAY's value above.

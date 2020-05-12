@@ -48,19 +48,19 @@
 	set category = null
 	set name = "Subtle Message"
 
-	if(!ismob(M))	return
-	if (!holder)
-		to_chat(src, "Only administrators may use this command.")
+	if(!ismob(M))	
+		return
+	if(!check_rights(R_ADMIN|R_MOD|R_MENTOR))
+		to_chat(src, "Only staff members may use this command.")
 		return
 
 	var/msg = input("Message:", text("Subtle PM to [M.key]")) as text
 
-	if (!msg)
+	if(!msg)
 		return
-	if(usr)
-		if (usr.client)
-			if(usr.client.holder)
-				to_chat(M, "\bold You hear a voice in your head... \italic [msg]")
+
+	if(usr?.client?.holder)
+		to_chat(M, "\bold You hear a voice in your head... \italic [msg]")
 
 	log_admin("SubtlePM: [key_name(usr)] -> [key_name(M)] : [msg]")
 	message_admins("\blue \bold SubtleMessage: [key_name_admin(usr)] -> [key_name_admin(M)] : [msg]", 1)
@@ -112,7 +112,7 @@
 
 	var/msg = input("Message:", text("Enter the text you wish to appear to everyone:")) as text
 
-	if (!msg)
+	if(!msg)
 		return
 	to_chat(world, "[msg]")
 	log_admin("GlobalNarrate: [key_name(usr)] : [msg]")
@@ -235,7 +235,7 @@ Ccomp's first proc.
 
 	var/list/mobs = list()
 	var/list/ghosts = list()
-	var/list/sortmob = sortAtom(mob_list)                           // get the mob list.
+	var/list/sortmob = sortNames(mob_list)                           // get the mob list.
 	/var/any=0
 	for(var/mob/dead/observer/M in sortmob)
 		mobs.Add(M)                                             //filter it where it's only ghosts
@@ -571,8 +571,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 		if("Yes")
 			command_announcement.Announce(input, customname, new_sound = 'sound/AI/commandreport.ogg');
 		if("No")
-			to_chat(world, "\red New update available at all communication consoles.")
-			world << sound('sound/AI/commandreport.ogg')
+			command_announcement.Announce("\red New update available at all communication consoles.", customname, new_sound = 'sound/AI/commandreport.ogg')
 
 	log_admin("[key_name(src)] has created a command report: [input]")
 	message_admins("[key_name_admin(src)] has created a command report", 1)
@@ -598,7 +597,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 				C.messagetext.Add(P.info)
 
 		log_admin("[key_name(src)] has created an AI report: [input]")
-		message_admins("[key_name_admin(src)] has created an AI report", 1)
+		message_admins("[key_name_admin(src)] has created an AI report: [input]", 1)
 		feedback_add_details("admin_verb","CCR") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 	else
 		to_chat(usr, "<span class='warning'>[MAIN_AI_SYSTEM] is not responding. It may be offline or destroyed.</span>")
@@ -645,8 +644,8 @@ Traitors and the like can also be revived with the previous role mostly intact.
 		return
 
 	if (alert(src, "Are you sure you want to delete:\n[O]\nat ([O.x], [O.y], [O.z])?", "Confirmation", "Yes", "No") == "Yes")
-		log_admin("[key_name(usr)] deleted [O] at ([O.x],[O.y],[O.z]) (<A HREF='?_src_=holder;adminplayerobservejump=\ref[usr]'>JMP</A>)")
-		message_admins("[key_name_admin(usr)] deleted [O] at ([O.x],[O.y],[O.z])", 1)
+		log_admin("[key_name(usr)] deleted [O] at ([O.x],[O.y],[O.z])")
+		message_admins("[key_name_admin(usr)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[usr]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservejump=\ref[usr]'>JMP</A>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[usr]'>FLW</a>) deleted [O] at ([O.x],[O.y],[O.z])", 1)
 		feedback_add_details("admin_verb","DEL") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 		cdel(O)
 
@@ -897,8 +896,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	set name = "Attack Log"
 
 	to_chat(usr, text("\red <b>Attack Log for []</b>", mob))
-	for(var/t in M.attack_log)
-		to_chat(usr, t)
+	show_individual_logging_panel(M)
 	feedback_add_details("admin_verb","ATTL") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 

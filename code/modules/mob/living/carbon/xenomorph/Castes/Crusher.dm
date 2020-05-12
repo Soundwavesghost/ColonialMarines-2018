@@ -1,25 +1,148 @@
+/datum/xeno_caste/crusher
+	caste_name = "Crusher"
+	display_name = "Crusher"
+	upgrade_name = "Young"
+	caste_desc = "A huge tanky xenomorph."
+	caste_type_path = /mob/living/carbon/Xenomorph/Crusher
+
+	tier = 3
+	upgrade = 0
+
+	// *** Melee Attacks *** //
+	melee_damage_lower = 20
+	melee_damage_upper = 35
+	attack_delay = 0.5 
+
+	// *** Tackle *** //
+	tackle_damage = 55 
+
+	// *** RNG Attacks *** //
+	tail_chance = 0 //Inherited from old code. Tail's too big
+
+	// *** Speed *** //
+	speed = 0.1
+
+	// *** Plasma *** //
+	plasma_max = 200
+	plasma_gain = 10
+
+	// *** Health *** //
+	max_health = 300
+
+	// *** Evolution *** //
+	upgrade_threshold = 400
+
+	deevolves_to = /mob/living/carbon/Xenomorph/Warrior
+
+	// *** Flags *** //
+	caste_flags = CASTE_CAN_BE_QUEEN_HEALED|CASTE_CAN_BE_GIVEN_PLASMA
+
+	// *** Defense *** //
+	armor_deflection = 80
+
+/datum/xeno_caste/crusher/mature
+	upgrade_name = "Mature"
+	caste_desc = "A huge tanky xenomorph. It looks a little more dangerous."
+
+	upgrade = 1
+
+	// *** Melee Attacks *** //
+	melee_damage_lower = 20
+	melee_damage_upper = 35
+	attack_delay = 0.5 
+
+	// *** Tackle *** //
+	tackle_damage = 60
+
+	// *** Speed *** //
+	speed = 0.1
+
+	// *** Plasma *** //
+	plasma_max = 300
+	plasma_gain = 15
+
+	// *** Health *** //
+	max_health = 325
+
+	// *** Evolution *** //
+	upgrade_threshold = 800
+
+	deevolves_to = /mob/living/carbon/Xenomorph/Warrior
+
+	// *** Defense *** //
+	armor_deflection = 90 
+
+/datum/xeno_caste/crusher/elder
+	upgrade_name = "Elder"
+	caste_desc = "A huge tanky xenomorph. It looks pretty strong."
+
+	upgrade = 2
+
+	// *** Melee Attacks *** //
+	melee_damage_lower = 30
+	melee_damage_upper = 40
+	attack_delay = 0.5 
+
+	// *** Tackle *** //
+	tackle_damage = 65
+
+	// *** Speed *** //
+	speed = 0.1
+
+	// *** Plasma *** //
+	plasma_max = 400
+	plasma_gain = 30
+
+	// *** Health *** //
+	max_health = 340
+
+	// *** Evolution *** //
+	upgrade_threshold = 1600
+
+	deevolves_to = /mob/living/carbon/Xenomorph/Warrior
+
+	// *** Defense *** //
+	armor_deflection = 95 
+
+/datum/xeno_caste/crusher/ancient
+	upgrade_name = "Ancient"
+	caste_desc = "It always has the right of way."
+	ancient_message = "You are the physical manifestation of a Tank. Almost nothing can harm you."
+	upgrade = 3
+
+	// *** Melee Attacks *** //
+	melee_damage_lower = 35
+	melee_damage_upper = 45
+	attack_delay = 0.5 
+
+	// *** Tackle *** //
+	tackle_damage = 70
+
+	// *** Speed *** //
+	speed = 0.1
+
+	// *** Plasma *** //
+	plasma_max = 400
+	plasma_gain = 30
+
+	// *** Health *** //
+	max_health = 350
+
+	deevolves_to = /mob/living/carbon/Xenomorph/Warrior
+
+	// *** Defense *** //
+	armor_deflection = 100
+
 /mob/living/carbon/Xenomorph/Crusher
-	caste = "Crusher"
+	caste_base_type = /mob/living/carbon/Xenomorph/Crusher
 	name = "Crusher"
 	desc = "A huge alien with an enormous armored head crest."
 	icon = 'icons/Xeno/2x2_Xenos.dmi'
 	icon_state = "Crusher Walking"
-	melee_damage_lower = 15
-	melee_damage_upper = 30
-	tacklemin = 4
-	tacklemax = 7
-	tackle_chance = 60
 	health = 300
 	maxHealth = 300
 	plasma_stored = 200
-	plasma_gain = 10
-	plasma_max = 200
-	upgrade_threshold = 800
-	evolution_allowed = FALSE
-	caste_desc = "A huge tanky xenomorph."
 	speed = 0.1
-	tail_chance = 0 //Inherited from old code. Tail's too big
-	armor_deflection = 75
 	tier = 3
 	upgrade = 0
 	drag_delay = 6 //pulling a big dead xeno is hard
@@ -38,6 +161,7 @@
 		/datum/action/xeno_action/regurgitate,
 		/datum/action/xeno_action/activable/stomp,
 		/datum/action/xeno_action/ready_charge,
+		/datum/action/xeno_action/activable/cresttoss,
 		)
 
 /mob/living/carbon/Xenomorph/Crusher/proc/stomp()
@@ -52,9 +176,14 @@
 		to_chat(src, "<span class='xenodanger'>You can't rear up to stomp with that thing on your leg!</span>")
 		return
 
-	if(!check_plasma(50)) return
+	if(stagger)
+		to_chat(src, "<span class='xenowarning'>You try to stomp but are unable as you fail to shake off the shock!</span>")
+		return
+
+	if(!check_plasma(80))
+		return
 	has_screeched = world.time
-	use_plasma(50)
+	use_plasma(80)
 
 	round_statistics.crusher_stomps++
 
@@ -63,23 +192,33 @@
 	"<span class='xenodanger'>You smash into the ground!</span>")
 	create_stomp() //Adds the visual effect. Wom wom wom
 
-	var/i = 5
-	for(var/mob/living/M in range(1,loc))
-		if(!i) break
-		if(!isXeno(M))
-			if(M.loc == loc)
-				if(M.stat == DEAD)
-					continue
-				if(!(M.status_flags & XENO_HOST) && !istype(M.buckled, /obj/structure/bed/nest))
-					round_statistics.crusher_stomp_victims++
-					M.take_overall_damage(40) //The same as a full charge, but no more than that.
-					M.attack_log += text("\[[time_stamp()]\] <font color='orange'>was xeno stomped by [src] ([ckey])</font>")
-					attack_log += text("\[[time_stamp()]\] <font color='red'>xeno stomped [M.name] ([M.ckey])</font>")
-					log_attack("[src] ([ckey]) xeno stomped [M.name] ([M.ckey])")
-				M.KnockDown(rand(2, 3))
-				to_chat(M, "<span class='highdanger'>You are stomped on by [src]!</span>")
+	for(var/mob/living/M in range(2,loc))
+		if(isXeno(M) || M.stat == DEAD || ((M.status_flags & XENO_HOST) && istype(M.buckled, /obj/structure/bed/nest)))
+			continue
+		var/distance = get_dist(M, loc)
+		var/damage = (rand(xeno_caste.melee_damage_lower, xeno_caste.melee_damage_upper) * 1.5) / max(1,distance + 1)
+		if(frenzy_aura > 0)
+			damage *= (1 + round(frenzy_aura * 0.1,0.01)) //+10% per level of Frenzy
+		if(distance == 0) //If we're on top of our victim, give him the full impact
+			round_statistics.crusher_stomp_victims++
+			var/armor_block = M.run_armor_check("chest", "melee")
+			if(ishuman(M))
+				var/mob/living/carbon/human/H = M
+				H.take_overall_damage(rand(damage * 0.75,damage * 1.25), armor_block) //Armour functions against this.
+			else
+				M.take_overall_damage(rand(damage * 0.75,damage * 1.25), armor_block) //Armour functions against this.
+			to_chat(M, "<span class='highdanger'>You are stomped on by [src]!</span>")
+			shake_camera(M, 3, 3)
+		else
+			step_away(M, src, 1) //Knock away
 			shake_camera(M, 2, 2)
-		i--
+			to_chat(M, "<span class='highdanger'>You reel from the shockwave of [src]'s stomp!</span>")
+		if(distance < 2) //If we're beside or adjacent to the Crusher, we get knocked down.
+			M.KnockDown(1)
+		else
+			M.Stun(1) //Otherwise we just get stunned.
+		M.apply_damage(rand(damage * 0.75 , damage * 1.25), HALLOSS) //Armour ignoring Halloss
+
 
 //The atom collided with is passed to this proc, all types of collisions are dealt with here.
 //The atom does not tell the Crusher how to handle a collision, the Crusher is an independant
@@ -271,9 +410,7 @@
 			if(count)
 				X.charge_speed -= X.charge_speed_buildup / (count * 2) // half normal slowdown regardless of number of corpses.
 		else if(!(status_flags & XENO_HOST) && !istype(buckled, /obj/structure/bed/nest))
-			src.attack_log += text("\[[time_stamp()]\] <font color='orange'>was xeno charged by [X.name] ([X.ckey])</font>")
-			X.attack_log += text("\[[time_stamp()]\] <font color='red'>xeno charged [src.name] ([src.ckey])</font>")
-			log_attack("[X.name] ([X.ckey]) xeno charged [src.name] ([src.ckey])")
+			log_combat(X, src, "xeno charged")
 			apply_damage(X.charge_speed * 40, BRUTE)
 			X.visible_message("<span class='danger'>[X] rams [src]!</span>",
 			"<span class='xenodanger'>You ram [src]!</span>")
@@ -289,9 +426,7 @@
 	if(X.charge_speed > X.charge_speed_buildup * X.charge_turfs_to_charge)
 		playsound(loc, "punch", 25, 1)
 		if(hivenumber != X.hivenumber)
-			src.attack_log += text("\[[time_stamp()]\] <font color='orange'>was xeno charged by [X.name] ([X.ckey])</font>")
-			X.attack_log += text("\[[time_stamp()]\] <font color='red'>xeno charged [src.name] ([src.ckey])</font>")
-			log_attack("[X.name] ([X.ckey]) xeno charged [src.name] ([src.ckey])")
+			log_combat(X, src, "xeno charged")
 			apply_damage(X.charge_speed * 20, BRUTE) // half damage to avoid sillyness
 		if(anchored) //Ovipositor queen can't be pushed
 			X.stop_momentum(X.charge_dir, TRUE)

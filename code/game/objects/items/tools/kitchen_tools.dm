@@ -22,7 +22,7 @@
 	throwforce = 5
 	throw_speed = 3
 	throw_range = 5
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	origin_tech = "materials=1"
 	attack_verb = list("attacked", "stabbed", "poked")
 	sharp = 0
@@ -43,7 +43,8 @@
 		return ..()
 
 	if (reagents.total_volume > 0)
-		reagents.trans_to_ingest(M, reagents.total_volume)
+		reagents.reaction(M, INGEST)
+		reagents.trans_to(M, reagents.total_volume)
 		if(M == user)
 			for(var/mob/O in viewers(M, null))
 				O.show_message(text("\blue [] eats some [] from \the [].", user, loaded, src), 1)
@@ -128,7 +129,7 @@
 	name = "kitchen knife"
 	icon_state = "knife"
 	desc = "A general purpose Chef's Knife made by SpaceCook Incorporated. Guaranteed to stay sharp for years to come."
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	sharp = IS_SHARP_ITEM_ACCURATE
 	edge = 1
 	force = 10.0
@@ -159,7 +160,7 @@
 	name = "butcher's cleaver"
 	icon_state = "butch"
 	desc = "A huge thing used for chopping and chopping up meat. This includes clowns and clown-by-products."
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	force = 15.0
 	w_class = 2.0
 	throwforce = 8.0
@@ -197,9 +198,9 @@
 		user.KnockOut(2)
 		return
 
-	M.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been attacked with [src.name] by [user.name] ([user.ckey])</font>")
-	user.attack_log += text("\[[time_stamp()]\] <font color='red'>Used the [src.name] to attack [M.name] ([M.ckey])</font>")
-	msg_admin_attack("[user.name] ([user.ckey]) used the [src.name] to attack [M.name] ([M.ckey]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
+
+	log_combat(user, M, "attacked", src)
+	msg_admin_attack("[key_name(usr)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[usr]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[usr.x];Y=[usr.y];Z=[usr.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[usr]'>FLW</a>) used the [src.name] to attack [key_name(M)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[M]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[M.x];Y=[M.y];Z=[M.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[M]'>FLW</a>)")
 
 	var/t = user:zone_selected
 	if (t == "head")
@@ -221,7 +222,7 @@
 				return
 			else
 				H.visible_message("\red [user] tried to knock [H] unconscious!", "\red [user] tried to knock you unconscious!")
-				H.eye_blurry += 3
+				H.blur_eyes(3)
 	return ..()
 
 /*
@@ -237,7 +238,7 @@
 	throw_speed = 1
 	throw_range = 5
 	w_class = 3.0
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	matter = list("metal" = 3000)
 	/* // NOPE
 	var/food_total= 0
@@ -295,9 +296,9 @@
 			if (istype(location, /turf))
 				location.add_mob_blood(H)     ///Plik plik, the sound of blood
 
-		M.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been attacked with [src.name] by [user.name] ([user.ckey])</font>")
-		user.attack_log += text("\[[time_stamp()]\] <font color='red'>Used the [src.name] to attack [M.name] ([M.ckey])</font>")
-		msg_admin_attack("[user.name] ([user.ckey]) used the [src.name] to attack [M.name] ([M.ckey]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
+
+		log_combat(user, M, "attacked", src)
+		msg_admin_attack("[key_name(usr)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[usr]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[usr.x];Y=[usr.y];Z=[usr.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[usr]'>FLW</a>) used the [src.name] to attack [key_name(M)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[M]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[M.x];Y=[M.y];Z=[M.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[M]'>FLW</a>)")
 
 		if(prob(15))
 			M.KnockDown(3)

@@ -14,6 +14,7 @@
 
 /obj/item/ammo_magazine/pistol/hp
 	name = "\improper M4A3 hollowpoint magazine (9mm)"
+	icon_state = "m4a3_HP"
 	default_ammo = /datum/ammo/bullet/pistol/hollow
 
 /obj/item/ammo_magazine/pistol/ap
@@ -29,7 +30,7 @@
 /obj/item/ammo_magazine/pistol/extended
 	name = "\improper M4A3 extended magazine (9mm)"
 	max_rounds = 22
-	icon_state = "m4a3" //PLACEHOLDER
+	icon_state = "m4a3_ext"
 	bonus_overlay = "m4a3_ex"
 
 
@@ -56,6 +57,13 @@
 	default_ammo = /datum/ammo/bullet/pistol
 	gun_type = /obj/item/weapon/gun/pistol/b92fs
 
+/obj/item/ammo_magazine/pistol/b92fstranq
+	name = "\improper M9 tranq magazine (9mm)"
+	caliber = "9mm"
+	icon_state = "m4a3"
+	max_rounds = 12
+	default_ammo = /datum/ammo/bullet/pistol/tranq
+	gun_type = /obj/item/weapon/gun/pistol/b92fs/M9
 
 //-------------------------------------------------------
 //DEAGLE //This one is obvious.

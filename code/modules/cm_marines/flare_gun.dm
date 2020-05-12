@@ -4,10 +4,9 @@ obj/item/projectile/flareburst
 		unacidable=1
 		anchored=1  //SEE modules/projectiles/projectile.dm
 		layer = 10  //random high layer to show visibillity above other icons
-		flags_pass = PASSTABLE
 		mouse_opacity=0
 		icon='icons/Marine/flaregun.dmi'
-		icon_state = "horrible"
+		icon_state = "flareround"
 		damage = 3
 		stun=1
 		damage_type = BURN
@@ -25,11 +24,11 @@ obj/item/projectile/flareburst
 /obj/item/weapon/flaregun
 	name = "Signal Flare Gun"
 	icon = 'icons/Marine/flaregun.dmi'
-	item_state = "flare_g"
+	item_state = "flaregun"
 	origin_tech = "combat=1;materials=2"
 	force = 3.0
 	w_class = 1.0
-	flags = FPRINT|TABLEPASS|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_WAIST
 	var/loaded_s = 0 //any shell loaded
 	var/shell_name = "nothing"
@@ -170,7 +169,7 @@ obj/item/projectile/flareburst
 	icon_state = "shell"
 	w_class =0.5
 	origin_tech="combat=1;materials=1"
-	flags = FPRINT|TABLEPASS|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_WAIST|SLOT_STORE
 
 /obj/item/flareround_sp
@@ -180,5 +179,5 @@ obj/item/projectile/flareburst
 	icon_state = "shell"
 	w_class =0.5
 	origin_tech="combat=1;materials=1"
-	flags = FPRINT|TABLEPASS|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_WAIST|SLOT_STORE

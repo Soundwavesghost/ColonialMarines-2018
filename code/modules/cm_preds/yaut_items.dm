@@ -27,7 +27,7 @@
 	gas_filter_strength = 3
 	eye_protection = 2
 	var/current_goggles = 0 //0: OFF. 1: NVG. 2: Thermals. 3: Mesons
-	vision_impair = 0
+	tint = 0
 	unacidable = 1
 	anti_hug = 100
 
@@ -416,10 +416,14 @@
 		playsound(M.loc,'sound/effects/pred_cloakon.ogg', 15, 1)
 		M.alpha = 10
 
-		var/datum/mob_hud/security/advanced/SA = huds[MOB_HUD_SECURITY_ADVANCED]
-		SA.remove_from_hud(M)
-		var/datum/mob_hud/xeno_infection/XI = huds[MOB_HUD_XENO_INFECTION]
-		XI.remove_from_hud(M)
+		if(M.smokecloaked)
+			M.smokecloaked = FALSE
+		else
+			var/datum/mob_hud/security/advanced/SA = huds[MOB_HUD_SECURITY_ADVANCED]
+			SA.remove_from_hud(M)
+			var/datum/mob_hud/xeno_infection/XI = huds[MOB_HUD_XENO_INFECTION]
+			XI.remove_from_hud(M)
+
 		spawn(1)
 			anim(M.loc,M,'icons/mob/mob.dmi',,"cloak",,M.dir)
 
@@ -743,7 +747,7 @@
 	icon = 'icons/obj/items/predator.dmi'
 	icon_state = "teleporter"
 	origin_tech = "materials=7;bluespace=7;engineering=7"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	w_class = 1
 	force = 1
 	throwforce = 1
@@ -799,7 +803,7 @@
 /obj/structure/campfire
 	name = "fire"
 	desc = "A crackling fire. What is it even burning?"
-	icon = 'code/WorkInProgress/Cael_Aislinn/Jungle/jungle.dmi'
+	icon = 'icons/obj/structures/jungle.dmi'
 	icon_state = "campfire"
 	density = 0
 	layer = TURF_LAYER
@@ -913,7 +917,7 @@
 	name = "chainwhip"
 	desc = "A segmented, lightweight whip made of durable, acid-resistant metal. Not very common among Yautja Hunters, but still a dangerous weapon capable of shredding prey."
 	icon_state = "whip"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_WAIST
 	force = 35
 	throwforce = 12
@@ -940,7 +944,7 @@
 	icon = 'icons/obj/items/predator.dmi'
 	icon_state = "predknife"
 	item_state = "knife"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_STORE
 	sharp = IS_SHARP_ITEM_ACCURATE
 	force = 24
@@ -990,7 +994,7 @@
 	desc = "An expertly crafted Yautja blade carried by hunters who wish to fight up close. Razor sharp, and capable of cutting flesh into ribbons. Commonly carried by aggresive and lethal hunters."
 	icon = 'icons/obj/items/predator.dmi'
 	icon_state = "clansword"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_BACK
 	sharp = IS_SHARP_ITEM_BIG
 	edge = 1
@@ -1013,14 +1017,15 @@
 		else
 			to_chat(user, "<span class='warning'>You aren't strong enough to swing the sword properly!</span>")
 			force = round(initial(force)/2)
-			if(prob(50)) user.make_dizzy(80)
+			if(prob(50))
+				user.Dizzy(80)
 
 		return ..()
 
 	pickup(mob/living/user as mob)
 		if(!isYautja(user))
 			to_chat(user, "<span class='warning'>You struggle to pick up the huge, unwieldy sword. It makes you dizzy just trying to hold it!</span>")
-			user.make_dizzy(50)
+			user.Dizzy(50)
 
 /obj/item/weapon/yautja_scythe
 	name = "double war scythe"
@@ -1028,7 +1033,7 @@
 	icon = 'icons/obj/items/predator.dmi'
 	icon_state = "predscythe"
 	item_state = "scythe"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_WAIST
 	sharp = IS_SHARP_ITEM_BIG
 	force = 32
@@ -1070,7 +1075,7 @@
 	desc = "A compact yet deadly personal weapon. Can be concealed when folded. Functions well as a throwing weapon or defensive tool. A common sight in Yautja packs due to its versatility."
 	icon = 'icons/obj/items/predator.dmi'
 	icon_state = "combistick"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	flags_equip_slot = SLOT_BACK
 	w_class = 4
 	force = 32
@@ -1185,7 +1190,7 @@
 			return
 
 		if(user)
-			msg_admin_attack("[user.name] ([user.ckey]) primed \a [src] (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
+			msg_admin_attack("[key_name(usr)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[usr]'>?</A>) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[usr.x];Y=[usr.y];Z=[usr.z]'>JMP</a>) (<A HREF='?_src_=holder;adminplayerfollow=\ref[usr]'>FLW</a>) primed \a [src]")
 		icon_state = initial(icon_state) + "_active"
 		active = 1
 		if(dangerous)
@@ -1204,7 +1209,7 @@
 		return
 
 	check_eye(mob/user)
-		if (user.is_mob_incapacitated() || user.blinded )
+		if (user.is_mob_incapacitated() || is_blind(user) )
 			user.unset_interaction()
 		else if ( !current || get_turf(user) != activated_turf || src.loc != user ) //camera doesn't work, or we moved.
 			user.unset_interaction()

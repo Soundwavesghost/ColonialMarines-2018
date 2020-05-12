@@ -44,7 +44,7 @@
 		if(istype(master, /obj/item/storage))
 			var/obj/item/storage/S = master
 			S.close(user)
-	return 1
+	return TRUE
 
 
 /obj/screen/action_button
@@ -54,16 +54,16 @@
 
 /obj/screen/action_button/clicked(var/mob/user)
 	if(!user || !source_action)
-		return 1
+		return TRUE
 	if(user.next_move >= world.time)
-		return 1
+		return TRUE
 	user.next_move = world.time + 6
 
 	if(source_action.can_use_action())
 		source_action.action_activate()
 	else
 		source_action.fail_activate()
-	return 1
+	return TRUE
 
 /obj/screen/action_button/Dispose()
 	source_action = null
@@ -96,7 +96,7 @@
 		name = "Hide Buttons"
 		icon_state = "hide"
 	user.update_action_buttons()
-	return 1
+	return TRUE
 
 
 /obj/screen/storage
@@ -117,122 +117,6 @@
 			else color = null
 
 
-
-/obj/screen/gun
-	name = "gun"
-	dir = 2
-	var/gun_click_time = -100
-
-/obj/screen/gun/move
-	name = "Allow Walking"
-	icon_state = "no_walk0"
-	screen_loc = ui_gun2
-
-	update_icon(mob/user)
-		if(user.gun_mode)
-			if(user.target_can_move)
-				icon_state = "no_walk1"
-				name = "Disallow Walking"
-			else
-				icon_state = "no_walk0"
-				name = "Allow Walking"
-			screen_loc = initial(screen_loc)
-			return
-		screen_loc = null
-
-/obj/screen/gun/move/clicked(var/mob/user)
-	if (..())
-		return 1
-
-	if(gun_click_time > world.time - 30)	//give them 3 seconds between mode changes.
-		return 1
-	if(!istype(user.get_held_item(),/obj/item/weapon/gun))
-		to_chat(user, "You need your gun in your active hand to do that!")
-		return 1
-	user.AllowTargetMove()
-	gun_click_time = world.time
-	return 1
-
-
-/obj/screen/gun/run
-	name = "Allow Running"
-	icon_state = "no_run0"
-	screen_loc = ui_gun3
-
-	update_icon(mob/user)
-		if(user.gun_mode)
-			if(user.target_can_move)
-				if(user.target_can_run)
-					icon_state = "no_run1"
-					name = "Disallow Running"
-				else
-					icon_state = "no_run0"
-					name = "Allow Running"
-				screen_loc = initial(screen_loc)
-				return
-		screen_loc = null
-
-/obj/screen/gun/run/clicked(var/mob/user)
-	if (..())
-		return 1
-
-	if(gun_click_time > world.time - 30)	//give them 3 seconds between mode changes.
-		return 1
-	if(!istype(user.get_held_item(),/obj/item/weapon/gun))
-		to_chat(user, "You need your gun in your active hand to do that!")
-		return 1
-	user.AllowTargetRun()
-	gun_click_time = world.time
-	return 1
-
-
-/obj/screen/gun/item
-	name = "Allow Item Use"
-	icon_state = "no_item0"
-	screen_loc = ui_gun1
-
-	update_icon(mob/user)
-		if(user.gun_mode)
-			if(user.target_can_click)
-				icon_state = "no_item1"
-				name = "Allow Item Use"
-			else
-				icon_state = "no_item0"
-				name = "Disallow Item Use"
-			screen_loc = initial(screen_loc)
-			return
-		screen_loc = null
-
-/obj/screen/gun/item/clicked(var/mob/user)
-	if (..())
-		return 1
-
-	if(gun_click_time > world.time - 30)	//give them 3 seconds between mode changes.
-		return 1
-	if(!istype(user.get_held_item(),/obj/item/weapon/gun))
-		to_chat(user, "You need your gun in your active hand to do that!")
-		return 1
-	user.AllowTargetClick()
-	gun_click_time = world.time
-	return 1
-
-
-/obj/screen/gun/mode
-	name = "Toggle Gun Mode"
-	icon_state = "gun0"
-	screen_loc = ui_gun_select
-
-	update_icon(mob/user)
-		if(user.gun_mode) icon_state = "gun1"
-		else icon_state = "gun0"
-
-/obj/screen/gun/mode/clicked(var/mob/user)
-	if (..())
-		return 1
-	user.ToggleGunMode()
-	return 1
-
-
 /obj/screen/zone_sel
 	name = "damage zone"
 	icon_state = "zone_sel"
@@ -246,7 +130,7 @@
 
 /obj/screen/zone_sel/clicked(var/mob/user, var/list/mods)
 	if (..())
-		return 1
+		return TRUE
 
 	var/icon_x = text2num(mods["icon-x"])
 	var/icon_y = text2num(mods["icon-y"])
@@ -260,7 +144,7 @@
 				if(17 to 22)
 					selecting = "l_foot"
 				else
-					return 1
+					return TRUE
 		if(4 to 9) //Legs
 			switch(icon_x)
 				if(10 to 15)
@@ -268,7 +152,7 @@
 				if(17 to 22)
 					selecting = "l_leg"
 				else
-					return 1
+					return TRUE
 		if(10 to 13) //Hands and groin
 			switch(icon_x)
 				if(8 to 11)
@@ -278,7 +162,7 @@
 				if(21 to 24)
 					selecting = "l_hand"
 				else
-					return 1
+					return TRUE
 		if(14 to 22) //Chest and arms to shoulders
 			switch(icon_x)
 				if(8 to 11)
@@ -288,7 +172,7 @@
 				if(21 to 24)
 					selecting = "l_arm"
 				else
-					return 1
+					return TRUE
 		if(23 to 30) //Head, but we need to check for eye or mouth
 			if(icon_x in 12 to 20)
 				selecting = "head"
@@ -305,7 +189,7 @@
 
 	if(old_selecting != selecting)
 		update_icon(user)
-	return 1
+	return TRUE
 
 
 /obj/screen/zone_sel/alien
@@ -321,63 +205,63 @@
 
 
 /obj/screen/clicked(var/mob/user)
-	if(!user)	return 1
+	if(!user)	return TRUE
 
 	switch(name)
 
 		if("equip")
 			if (istype(user.loc,/obj/mecha)) // stops inventory actions in a mech
-				return 1
+				return TRUE
 			if(ishuman(user))
 				var/mob/living/carbon/human/H = user
 				H.quick_equip()
-			return 1
+			return TRUE
 
 		if("Reset Machine")
 			user.unset_interaction()
-			return 1
+			return TRUE
 
 		if("module")
 			if(issilicon(user))
 				if(usr:module)
-					return 1
+					return TRUE
 				user:pick_module()
-			return 1
+			return TRUE
 
 		if("radio")
 			if(issilicon(user))
 				user:radio_menu()
-			return 1
+			return TRUE
 		if("panel")
 			if(issilicon(user))
 				user:installed_modules()
-			return 1
+			return TRUE
 
 		if("store")
 			if(issilicon(user))
 				user:uneq_active()
-			return 1
+			return TRUE
 
 		if("module1")
 			if(istype(user, /mob/living/silicon/robot))
 				user:toggle_module(1)
-			return 1
+			return TRUE
 
 		if("module2")
 			if(istype(user, /mob/living/silicon/robot))
 				user:toggle_module(2)
-			return 1
+			return TRUE
 
 		if("module3")
 			if(istype(user, /mob/living/silicon/robot))
 				user:toggle_module(3)
-			return 1
+			return TRUE
 
 		if("Activate weapon attachment")
 			var/obj/item/weapon/gun/G = user.get_held_item()
 			if(istype(G))
 				G.activate_attachment_verb()
-			return 1
+			return TRUE
 
 		if("Toggle Rail Flashlight")
 			var/obj/item/weapon/gun/G = user.get_held_item()
@@ -386,59 +270,59 @@
 			var/obj/item/attachable/flashlight/F = G.rail
 			if(F && F.activate_attachment(G, user))
 				playsound(user, F.activation_sound, 15, 1)
-			return 1
+			return TRUE
 
 		if("Eject magazine")
 			var/obj/item/weapon/gun/G = user.get_held_item()
 			if(istype(G)) G.empty_mag()
-			return 1
+			return TRUE
 
 		if("Toggle burst fire")
 			var/obj/item/weapon/gun/G = user.get_held_item()
 			if(istype(G)) G.toggle_burst()
-			return 1
+			return TRUE
 
 		if("Use unique action")
 			var/obj/item/weapon/gun/G = user.get_held_item()
 			if(istype(G)) G.use_unique_action()
-			return 1
+			return TRUE
 
-	return 0
+	return FALSE
 
 
 /obj/screen/inventory/clicked(var/mob/user)
 	if (..())
-		return 1
+		return TRUE
 	if(user.is_mob_incapacitated(TRUE))
-		return 1
+		return TRUE
 	if (istype(user.loc,/obj/mecha)) // stops inventory actions in a mech
-		return 1
+		return TRUE
 	switch(name)
 		if("r_hand")
 			if(iscarbon(usr))
 				var/mob/living/carbon/C = user
 				C.activate_hand("r")
 				user.next_move = world.time+2
-			return 1
+			return TRUE
 		if("l_hand")
 			if(iscarbon(user))
 				var/mob/living/carbon/C = user
 				C.activate_hand("l")
 				user.next_move = world.time+2
-			return 1
+			return TRUE
 		if("swap")
 			user:swap_hand()
-			return 1
+			return TRUE
 		if("hand")
 			user:swap_hand()
-			return 1
+			return TRUE
 		else
 			if(user.attack_ui(slot_id))
 				user.update_inv_l_hand(0)
 				user.update_inv_r_hand(0)
 				user.next_move = world.time+6
-				return 1
-	return 0
+				return TRUE
+	return FALSE
 
 
 
@@ -454,7 +338,7 @@
 	if(iscarbon(user))
 		var/mob/living/carbon/C = user
 		C.toggle_throw_mode()
-		return 1
+		return TRUE
 
 /obj/screen/drop
 	name = "drop"
@@ -465,7 +349,7 @@
 
 /obj/screen/drop/clicked(var/mob/user)
 	user.drop_item_v()
-	return 1
+	return TRUE
 
 
 /obj/screen/resist
@@ -479,7 +363,7 @@
 	if(isliving(user))
 		var/mob/living/L = user
 		L.resist()
-		return 1
+		return TRUE
 
 /obj/screen/resist/alien
 	icon = 'icons/mob/screen1_alien.dmi'
@@ -494,7 +378,7 @@
 
 /obj/screen/mov_intent/clicked(var/mob/user)
 	if (..())
-		return 1
+		return TRUE
 	if(iscarbon(user))
 		var/mob/living/carbon/C = user
 		if(C.legcuffed)
@@ -511,7 +395,7 @@
 			icon_state = "running"
 	if(isXeno(user))
 		user.update_icons()
-	return 1
+	return TRUE
 
 
 /obj/screen/act_intent
@@ -521,7 +405,7 @@
 
 /obj/screen/act_intent/clicked(var/mob/user)
 	user.a_intent_change("right")
-	return 1
+	return TRUE
 
 /obj/screen/act_intent/corner/clicked(var/mob/user, var/list/mods)
 	var/_x = text2num(mods["icon-x"])
@@ -539,7 +423,7 @@
 	else if(_x>=17 && _y>=17)
 		user.a_intent_change("disarm")
 
-	return 1
+	return TRUE
 
 
 /obj/screen/internals
@@ -549,7 +433,7 @@
 
 /obj/screen/internals/clicked(var/mob/user)
 	if (..())
-		return 1
+		return TRUE
 	if(iscarbon(user))
 		var/mob/living/carbon/C = user
 		if(!C.is_mob_incapacitated())
@@ -560,7 +444,7 @@
 			else
 				if(!istype(C.wear_mask, /obj/item/clothing/mask))
 					to_chat(C, "<span class='notice'>You are not wearing a mask.</span>")
-					return 1
+					return TRUE
 				else
 					var/list/nicename = null
 					var/list/tankcheck = null
@@ -616,7 +500,7 @@
 						icon_state = "internal1"
 					else
 						to_chat(C, "<span class='notice'>You don't have a[breathes=="oxygen" ? "n oxygen" : addtext(" ",breathes)] tank.</span>")
-	return 1
+	return TRUE
 
 
 
@@ -644,9 +528,9 @@
 
 /obj/screen/pull/clicked(var/mob/user)
 	if (..())
-		return 1
+		return TRUE
 	user.stop_pulling()
-	return 1
+	return TRUE
 
 /obj/screen/pull/update_icon(mob/user)
 	if(!user) return
@@ -668,8 +552,16 @@
 /obj/screen/queen_locator
 	icon = 'icons/mob/screen1_alien.dmi'
 	icon_state = "trackoff"
-	name = "queen locator"
+	name = "queen locator (click for hive status)"
 	screen_loc = ui_queen_locator
+
+/obj/screen/queen_locator/clicked(var/mob/user)
+	if (..())
+		return TRUE
+	if (isXeno(user))
+		var/mob/living/carbon/Xenomorph/X = user
+		X.hive_status()
+	return TRUE
 
 
 /obj/screen/xenonightvision
@@ -681,14 +573,14 @@
 
 /obj/screen/xenonightvision/clicked(var/mob/user)
 	if (..())
-		return 1
+		return TRUE
 	var/mob/living/carbon/Xenomorph/X = user
 	X.toggle_nightvision()
 	if(icon_state == "nightvision1")
 		icon_state = "nightvision0"
 	else
 		icon_state = "nightvision1"
-	return 1
+	return TRUE
 
 
 /obj/screen/bodytemp
@@ -714,7 +606,7 @@
 
 /obj/screen/toggle_inv/clicked(var/mob/user)
 	if (..())
-		return 1
+		return TRUE
 
 	if(user.hud_used.inventory_shown)
 		user.hud_used.inventory_shown = 0
@@ -724,4 +616,4 @@
 		user.client.screen += user.hud_used.toggleable_inventory
 
 	user.hud_used.hidden_inventory_update()
-	return 1
+	return TRUE

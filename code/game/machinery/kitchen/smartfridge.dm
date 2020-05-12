@@ -10,7 +10,6 @@
 	use_power = 1
 	idle_power_usage = 5
 	active_power_usage = 100
-	flags_atom = NOREACT
 	var/global/max_n_of_items = 999 // Sorry but the BYOND infinite loop detector doesn't look things over 1000.
 	var/icon_on = "smartfridge"
 	var/icon_off = "smartfridge-off"
@@ -28,6 +27,11 @@
 	var/const/WIRE_SHOOTINV = 2
 	var/const/WIRE_SCANID = 3 //Only used by the secure smartfridge, but required by the cut, mend and pulse procs.
 
+
+/obj/machinery/smartfridge/New()
+	. = ..()
+	create_reagents()
+	reagents.set_reacting(FALSE)
 
 /obj/machinery/smartfridge/proc/accept_check(var/obj/item/O as obj)
 	if(istype(O,/obj/item/reagent_container/food/snacks/grown/) || istype(O,/obj/item/seeds/))
@@ -363,7 +367,8 @@
 	name = "\improper Refrigerated Medicine Storage"
 	desc = "A refrigerated storage unit for storing medicine and chemicals."
 	icon_state = "smartfridge" //To fix the icon in the map editor.
-	icon_on = "smartfridge_chem"
+	icon_on = "smartfridge"
+	icon_off = "smartfridge-off"
 	is_secure_fridge = TRUE
 	req_one_access_txt = "5;33"
 
@@ -382,9 +387,9 @@
 	desc = "A refrigerated storage unit for storing viral material."
 	is_secure_fridge = TRUE
 	req_access_txt = "39"
-	icon_state = "smartfridge_virology"
-	icon_on = "smartfridge_virology"
-	icon_off = "smartfridge_virology-off"
+	icon_state = "smartfridge"
+	icon_on = "smartfridge"
+	icon_off = "smartfridge-off"
 
 /obj/machinery/smartfridge/secure/virology/accept_check(var/obj/item/O as obj)
 	if(istype(O,/obj/item/reagent_container/glass/beaker/vial/))
@@ -396,7 +401,7 @@
 	name = "\improper Smart Chemical Storage"
 	desc = "A refrigerated storage unit for medicine and chemical storage."
 	is_secure_fridge = TRUE
-	req_one_access_txt = "5;20"
+	req_one_access = list(ACCESS_MARINE_MEDBAY, ACCESS_MARINE_CHEMISTRY, ACCESS_MARINE_MEDPREP) //Medics can now access the fridge
 
 /obj/machinery/smartfridge/chemistry/accept_check(var/obj/item/O as obj)
 	if(istype(O,/obj/item/storage/pill_bottle) || istype(O,/obj/item/reagent_container))

@@ -38,7 +38,7 @@
 	if(time_to_live <= 0)
 		cdel(src)
 	else if(time_to_live == 1)
-		alpha = 180
+		alpha -= 75
 		amount = 0
 		SetOpacity(0)
 
@@ -117,6 +117,64 @@
 				M.emote("cough")
 			spawn(20)
 				M.coughedtime = 0
+
+/////////////////////////////////////////////
+// Cloak Smoke
+/////////////////////////////////////////////
+/obj/effect/particle_effect/smoke/tactical
+	opacity = 0
+	alpha = 145
+
+/obj/effect/particle_effect/smoke/tactical/New(loc, oldamount)
+	..()
+	for(var/mob/living/M in get_turf(src))
+		affect(M)
+
+/obj/effect/particle_effect/smoke/tactical/Move()
+	..()
+	for(var/mob/living/M in get_turf(src))
+		affect(M)
+
+/obj/effect/particle_effect/smoke/tactical/process()
+	.=..()
+	for(var/mob/living/M in get_turf(src))
+		affect(M)
+
+/obj/effect/particle_effect/smoke/tactical/Dispose()
+	for(var/mob/living/M in get_turf(src))
+		uncloak_smoke_act(M)
+	..()
+
+/obj/effect/particle_effect/smoke/tactical/affect(var/mob/living/M)
+	if(istype(M))
+		cloak_smoke_act(M)
+
+/obj/effect/particle_effect/smoke/tactical/Crossed(atom/movable/M)
+	..()
+	if(isliving(M))
+		affect(M)
+
+/obj/effect/particle_effect/smoke/tactical/Uncrossed(var/mob/living/M)
+	..()
+	uncloak_smoke_act(M)
+
+/obj/effect/particle_effect/smoke/tactical/proc/cloak_smoke_act(var/mob/living/M)
+	if(ishuman(M))
+		var/mob/living/carbon/human/H = M
+		var/obj/item/clothing/gloves/yautja/Y = H.gloves
+		var/obj/item/storage/backpack/marine/satchel/scout_cloak/S = H.back
+		if(H.back)
+			if(istype(S) && S.camo_active)
+				return
+		if(H.gloves)
+			if(istype(Y) && Y.cloaked)
+				return
+		return M.smokecloak_on()
+	return M.smokecloak_on()
+
+
+/obj/effect/particle_effect/smoke/tactical/proc/uncloak_smoke_act(var/mob/living/M)
+	return M.smokecloak_off()
 
 /////////////////////////////////////////////
 // Sleep smoke
@@ -291,16 +349,15 @@
 	if(istype(M.buckled, /obj/structure/bed/nest) && M.status_flags & XENO_HOST)
 		return
 
-	var/effect_amt = round(6 + amount*6)
+	var/reagent_amount = rand(4,10) + rand(4,10) //Gaussian. Target number 7.
 
 	//Gas masks protect from inhalation and face contact effects, even without internals. Breath masks don't for balance reasons
 	if(!istype(M.wear_mask, /obj/item/clothing/mask/gas))
-		M.adjustOxyLoss(15) //Causes even more oxyloss damage due to neurotoxin locking up respiratory system
-		M.ear_deaf = max(M.ear_deaf, round(effect_amt*1.5)) //Paralysis of hearing system, aka deafness
+		M.reagents.add_reagent("xeno_toxin", reagent_amount)
 		if(!M.eye_blind) //Eye exposure damage
 			to_chat(M, "<span class='danger'>Your eyes sting. You can't see!</span>")
-		M.eye_blurry = max(M.eye_blurry, effect_amt*2)
-		M.eye_blind = max(M.eye_blind, round(effect_amt))
+		M.eye_blurry = max(M.eye_blurry + 2, 1)
+		M.eye_blind = max(M.eye_blind + 2, 1)
 		if(M.coughedtime != 1 && !M.stat) //Coughing/gasping
 			M.coughedtime = 1
 			if(prob(50))
@@ -309,16 +366,12 @@
 				M.emote("gasp")
 			spawn(15)
 				M.coughedtime = 0
-
+	else
+		M.reagents.add_reagent("xeno_toxin", reagent_amount * 0.5)
 	//Topical damage (neurotoxin on exposed skin)
 	to_chat(M, "<span class='danger'>Your body is going numb, almost as if paralyzed!</span>")
-	if(prob(40 + round(amount*15))) //Highly likely to drop items due to arms/hands seizing up
-		M.drop_held_item()
-	if(ishuman(M))
-		var/mob/living/carbon/human/H = M
-		H.temporary_slowdown = max(H.temporary_slowdown, round(effect_amt*1.5)) //One tick every two second
-
-
+	if(prob(round(reagent_amount*5))) //Likely to momentarily freeze up/fall due to arms/hands seizing up
+		M.AdjustKnockeddown(0.5)
 
 /////////////////////////////////////////////
 // Smoke spread
@@ -354,6 +407,9 @@
 /datum/effect_system/smoke_spread/bad
 	smoke_type = /obj/effect/particle_effect/smoke/bad
 
+datum/effect_system/smoke_spread/tactical
+	smoke_type = /obj/effect/particle_effect/smoke/tactical
+
 /datum/effect_system/smoke_spread/sleepy
 	smoke_type = /obj/effect/particle_effect/smoke/sleepy
 
@@ -369,12 +425,3 @@
 
 /datum/effect_system/smoke_spread/xeno_weaken
 	smoke_type = /obj/effect/particle_effect/smoke/xeno_weak
-
-
-
-
-
-
-
-
-

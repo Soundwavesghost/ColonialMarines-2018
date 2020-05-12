@@ -238,7 +238,7 @@ var/global/list/frozen_items = list("Alpha"=list(),"Bravo"=list(),"Charlie"=list
 
 			item_loop:
 				for(var/obj/item/W in items)
-					if((W.flags_inventory & CANTSTRIP) || (W.flags_item & NODROP)) //We don't keep donor items and undroppable/unremovable items
+					if((W.flags_inventory & CANTSTRIP) || (W.flags_item & NODROP)) //We don't keep undroppable/unremovable items
 						if(istype(W, /obj/item/clothing/suit/storage))
 							var/obj/item/clothing/suit/storage/SS = W
 							for(var/obj/item/I in SS.pockets) //But we keep stuff inside them
@@ -339,28 +339,15 @@ var/global/list/frozen_items = list("Alpha"=list(),"Bravo"=list(),"Charlie"=list
 							S.num_medics--
 						if("Squad Specialist")
 							S.num_specialists--
-							//we make the set this specialist took if any available again
-							if(H.mind.cm_skills)
-								var/set_name
-								switch(H.mind.cm_skills.spec_weapons)
-									if(SKILL_SPEC_ROCKET)
-										set_name = "Demolitionist Set"
-									if(SKILL_SPEC_GRENADIER)
-										set_name = "Heavy Grenadier Set"
-									if(SKILL_SPEC_PYRO)
-										set_name = "Pyro Set"
-									if(SKILL_SPEC_SCOUT)
-										set_name = "Scout Set"
-									if(SKILL_SPEC_SNIPER)
-										set_name = "Sniper Set"
+							if(H.specset && !available_specialist_sets.Find(H.specset))
+								available_specialist_sets += H.specset //we make the set this specialist took if any available again
 
-								if(set_name && !available_specialist_sets.Find(set_name))
-									available_specialist_sets += set_name
 						if("Squad Smartgunner")
 							S.num_smartgun--
 						if("Squad Leader")
 							S.num_leaders--
 					S.count--
+				H.assigned_squad?.clean_marine_from_squad(H,TRUE) //Remove from squad recods, if any.
 
 			ticker.mode.latejoin_tally-- //Cryoing someone out removes someone from the Marines, blocking further larva spawns until accounted for
 

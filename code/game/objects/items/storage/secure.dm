@@ -171,10 +171,7 @@
 			user.KnockOut(2)
 			return
 
-		M.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been attacked with [src.name] by [user.name] ([user.ckey])</font>")
-		user.attack_log += text("\[[time_stamp()]\] <font color='red'>Used the [src.name] to attack [M.name] ([M.ckey])</font>")
-
-		log_attack("<font color='red'>[user.name] ([user.ckey]) attacked [M.name] ([M.ckey]) with [src.name] (INTENT: [uppertext(user.a_intent)])</font>")
+		log_combat(user, M, "attack", src, "(INTENT: [uppertext(user.a_intent)])")
 
 		var/t = user:zone_selected
 		if (t == "head")
@@ -195,7 +192,7 @@
 						O.show_message(text("\red <B>[] has been knocked unconscious!</B>", H), 1, "\red You hear someone fall.", 2)
 				else
 					to_chat(H, text("\red [] tried to knock you unconcious!",user))
-					H.eye_blurry += 3
+					H.adjust_blurriness(3)
 
 		return*/
 
@@ -210,7 +207,7 @@
 	icon_opened = "safe0"
 	icon_locking = "safeb"
 	icon_sparking = "safespark"
-	flags_atom = FPRINT|CONDUCT
+	flags_atom = CONDUCT
 	force = 8.0
 	w_class = 8.0
 	max_w_class = 8

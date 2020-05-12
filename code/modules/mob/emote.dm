@@ -23,7 +23,7 @@
 
 
 	if (message)
-		log_emote("[name]/[key] : [message]")
+		log_message(message, LOG_EMOTE)
 
  //Hearing gasp and such every five seconds is not good emotes were not global for a reason.
  // Maybe some people are okay with that.
@@ -97,13 +97,13 @@
 
 
 	if(message)
-		log_emote("Ghost/[src.key] : [message]")
+		log_message(message, LOG_EMOTE)
 
 		for(var/mob/M in player_list)
 			if(istype(M, /mob/new_player))
 				continue
 
-			if(M.client && M.client.holder && (M.client.holder.rights & R_ADMIN|R_MOD) && (M.client.prefs.toggles_chat & CHAT_DEAD)) // Show the emote to admins/mods
+			if(M.client?.holder && (M.client.holder.rights & (R_ADMIN|R_MOD)) && (M.client.prefs.toggles_chat & CHAT_DEAD)) // Show the emote to admins/mods
 				to_chat(M, message)
 
 			else if(M.stat == DEAD && (M.client.prefs.toggles_chat & CHAT_DEAD)) // Show the emote to regular ghosts with deadchat toggled on

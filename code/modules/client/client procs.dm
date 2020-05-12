@@ -26,7 +26,7 @@
 
 	//search the href for script injection
 	if( findtext(href,"<script",1,0) )
-		to_chat(world.log, "Attempted use of scripts within a topic call, by [src]")
+		log_world("Attempted use of scripts within a topic call, by [src]")
 		message_admins("Attempted use of scripts within a topic call, by [src]")
 		//del(usr)
 		return
@@ -38,19 +38,16 @@
 			var/mob/M = C
 			C = M.client
 		if(!C) return //Outdated links to logged players generate runtimes
-		if(unansweredAhelps[C.computer_id]) unansweredAhelps.Remove(C.computer_id)
+		if(unansweredMhelps[C.computer_id]) 
+			unansweredMhelps.Remove(C.computer_id)
+		if(unansweredAhelps[C.computer_id]) 
+			unansweredAhelps.Remove(C.computer_id)
 		cmd_admin_pm(C,null)
 		return
 
-	//Map voting
-	if(href_list["vote_for_map"])
-		mapVote()
-		return
-
-
 	//Logs all hrefs
-	if(config && config.log_hrefs && href_logfile)
-		to_chat(href_logfile, "<small>[time2text(world.timeofday,"hh:mm")] [src] (usr:[usr])</small> || [hsrc ? "[hsrc] " : ""][href]<br>")
+	if(config && config.log_hrefs)
+		log_href("[time2text(world.timeofday,"hh:mm")] [src] (usr:[usr]) || [hsrc ? "[hsrc] " : ""][href]")
 
 	switch(href_list["_src_"])
 		if("holder")	hsrc = holder
@@ -122,6 +119,13 @@
 	if(holder)
 		admins += src
 		holder.owner = src
+	else // If it matters put a config check for this feature on this line
+		var/static/list/localhost_addresses = list("127.0.0.1", "::1")
+		if(isnull(address) || (address in localhost_addresses))
+			var/datum/admins/rank = new("!localhost!", ALL, ckey)
+			holder = rank
+			admins += src
+			rank.owner = src
 
 	//preferences datum - also holds some persistant data for the client (because we may as well keep these datums to a minimum)
 	prefs = preferences_datums[ckey]
@@ -166,6 +170,12 @@
 		if(src.ckey == line)
 			src.donator = 1
 			verbs += /client/proc/set_ooc_color_self
+
+	if(all_player_details[ckey])
+		player_details = all_player_details[ckey]
+	else
+		player_details = new
+		all_player_details[ckey] = player_details
 
 	//////////////
 	//DISCONNECT//
@@ -245,7 +255,6 @@
 	query_accesslog.Execute()
 
 
-#undef TOPIC_SPAM_DELAY
 #undef UPLOAD_LIMIT
 #undef MIN_CLIENT_VERSION
 
